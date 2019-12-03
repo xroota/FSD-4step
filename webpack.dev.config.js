@@ -21,6 +21,12 @@ module.exports = {
   entry: './src/index',
   devtool: 'inline-source-map',
   mode: 'development',
+  plugins: [
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery'
+    }),
+  ],
   module: {
     rules: [
       {
