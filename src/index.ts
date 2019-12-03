@@ -15,7 +15,12 @@
  */
 
 import {Car} from './Car';
+import {View} from './View/View';
 
 console.log('hi');
 const car: Car = new Car();
 car.go('vroom');
+const view: View = new View();
+view.show('hi, world!');
+view.show('hi, world!');
+view.show('hi, world!');
