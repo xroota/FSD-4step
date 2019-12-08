@@ -237,7 +237,6 @@ class View {
     change() {
          //this.onChange();
          this.eventObserver.notifyObservers({message: "valueChange", value: this.input.values});
-         console.log("view data change");
          
 
     }
@@ -655,7 +654,13 @@ class Config {
 	showTooltips = true;
 	color1 = "#3db13d";
 	color2 = "#ccc";
+    init = () => {
+		//view.init();
+	};
 	
+	destroy = () => {
+		//view.destroy(); 
+	};	
 
 }
 
