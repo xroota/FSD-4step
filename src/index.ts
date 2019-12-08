@@ -13,14 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import '../dist/index.scss';
 import {Car} from './Car';
 import {View} from './View/View';
+import {Model} from './Model/Model';
+import {Config} from './View/View';
+import {Presenter} from './Presenter/Presenter';
+
 
 console.log('hi');
-const car: Car = new Car();
+const car: Car = new Car(); 
 car.go('vroom');
-const view: View = new View();
-view.show('hi, world!');
-view.show('hi, world!');
-view.show('hi, world!');
+const model: Model = new Model();
+
+
+const config = new Config();
+
+const view = new View("input", Object.assign({}, config, model.modelData));
+
+const presenter = new Presenter(model,view);
+
+//view.show('hi, world!');
+//view.show('hi, world!');
