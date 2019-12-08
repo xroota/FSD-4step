@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@types/jquery": "^3.3.31",
+    "dat.gui": "^0.7.6",
     "jquery": "^3.4.1"
   }
 }
