@@ -9,29 +9,77 @@
  *
  */
 
-import {EventObserver} from '../EventObserver/EventObserver';
+import { EventObserver } from '../EventObserver/EventObserver';
+
+interface HTMLElementWithIndex extends HTMLElement {
+    index?: number;
+}
+
+interface ElementInput extends Element {
+    ranger? ,defaultValue?,value?,values?, min?,max?,step?,form?
+}
+
+interface ViewConfig {
+    min: number;
+    max: number;
+    step: number;
+    value?: Array<number>;
+    tooltip: boolean;
+    vertical: boolean;
+    multiple: boolean;
+    showTooltips: boolean;
+    color1: string;
+    color2: string;
+    classes?: {
+        input: string,
+        container: string,
+        vertical: string,
+        progress: string,
+        handle: string,
+        tooltip: string,
+        track: string,
+        multiple: string,
+
+    }
+    size?: number;
+
+}
 
 class View {
 
     eventObserver = new EventObserver();
-    input: any;
-    config: any;
-    mouseAxis: {};
-    trackSize: {};
-    trackPos: {};
-    nodes: any;
-    rects: {
-        container: any,
-        handle: any
+    input :  ElementInput;
+    config: ViewConfig;
+    mouseAxis: { x: string, y: string };
+    trackSize: { x: string, y: string };
+    trackPos: { x: string, y: string };;
+    nodes: {
+        container: HTMLElement,
+        track: HTMLElement,
+        progress: HTMLElement,
+        handle: HTMLElementWithIndex | [HTMLElementWithIndex, HTMLElementWithIndex],
+        tooltip: HTMLElement | [HTMLElement, HTMLElement, HTMLElement]
     };
-    touch: any;
+    rects: {
+        container: ClientRect,
+        handle: Array<ClientRect> | ClientRect
+    };
     axis: string;
-    activeHandle: any;
-    listeners: any;
-    accuracy: any;
+    activeHandle: HTMLElementWithIndex | boolean;
+    listeners: {
+        down: EventListenerOrEventListenerObject,
+        move: EventListenerOrEventListenerObject,
+        up: EventListenerOrEventListenerObject,
+        update: EventListenerOrEventListenerObject,
+        change: EventListenerOrEventListenerObject,
+        reset: EventListenerOrEventListenerObject,
+        scroll?: EventListenerOrEventListenerObject,
+        resize?: EventListenerOrEventListenerObject,
+    };
+    accuracy: number;
 
 
-    constructor(input?, config?) {
+    constructor(input?: string | Element, config?: ViewConfig) {
         const defaultConfig = {
             tooltip: true,
             showTooltips: true,
@@ -60,18 +108,17 @@ class View {
         this.trackSize = { x: "width", y: "height" };
         this.trackPos = { x: "left", y: "top" };
 
-        //this.touch = "ontouchstart" in window || (window.DocumentTouch && document instanceof DocumentTouch);
-
         this.init();
 
-        this.onInit();
+
     }
 
 	/**
 	 * Initialise the instance
 	 * @return {Void}
 	 */
-    init() {
+    init(): void {
+        let max: number = this.input.max;
         if (!this.input.ranger) {
             const props = { min: 0, max: 100, step: 1, value: this.input.value };
 
@@ -111,7 +158,7 @@ class View {
 	 * Render the instance
 	 * @return {Void}
 	 */
-    render() {
+    render(): void {
         const o = this.config;
         const c = o.classes;
 
@@ -119,8 +166,8 @@ class View {
         const track = this.createElement("div", c.track);
         const progress = this.createElement("div", c.progress);
 
-        let handle = this.createElement("div", c.handle);
-        let tooltip = this.createElement("div", c.tooltip);
+        let handle: [HTMLElementWithIndex, HTMLElementWithIndex] | HTMLElementWithIndex = this.createElement("div", c.handle);
+        let tooltip: [HTMLElement, HTMLElement, HTMLElement] | HTMLElement = this.createElement("div", c.tooltip);
 
         track.appendChild(progress);
 
@@ -161,7 +208,7 @@ class View {
         if (o.size) {
             container.style[this.trackSize[this.axis]] = !isNaN(o.size)
                 ? `${o.size}px`
-                : o.size;
+                : o.size.toString();
         }
 
         if (o.tooltip) {
@@ -182,17 +229,17 @@ class View {
         this.update();
     }
 
-    reset() {
+    reset(): void {
         this.setValue(this.input.defaultValue);
-        this.onEnd();
+
     }
 
-    setValueFromPosition(e) {
+    setValueFromPosition(e: Event) {
         const min = parseFloat(this.input.min);
         const max = parseFloat(this.input.max);
         const step = parseFloat(this.input.step);
         const rect = this.rects;
-        const axis = this.touch ? e.touches[0][this.mouseAxis[this.axis]] : e[this.mouseAxis[this.axis]];
+        const axis = e[this.mouseAxis[this.axis]];
         const pos = axis - this.rects.container[this.trackPos[this.axis]];
         const size = rect.container[this.trackSize[this.axis]];
 
@@ -207,9 +254,9 @@ class View {
         // apply granularity (step)
         value = Math.ceil(value / step) * step;
 
-        let index: any = false;
+        let index: number | boolean = false;
 
-        if (this.config.multiple) {
+        if (this.config.multiple && typeof this.activeHandle !== "boolean") {
             index = this.activeHandle.index;
 
             switch (index) {
@@ -230,83 +277,74 @@ class View {
         // This allows the onChange event to be fired only on a step
         // and not all the time.
         if (e.type === "mousedown" || parseFloat(value) !== parseFloat(this.input.value)) {
-            this.setValue(value, index);
+            this.setValue(value, Number(index));
         }
     }
 
-    change() {
-         //this.onChange();
-         this.eventObserver.notifyObservers({message: "valueChange", value: this.input.values});
-         
+    change(): void {
+        //this.onChange()
+        if (!this.config.multiple) this.input.values = [this.input.value];
+        this.eventObserver.notifyObservers({ message: "valueChange", value: this.input.values });
+
 
     }
 
-    touchstart(e) {
-        // this.nodes.container.removeEventListener("mousedown", this.events.down);
 
-        this.down(e);
-    }
 
 	/**
-	 * Mousesown / touchstart method
+	 * Mousesown 
 	 * @param  {Object} e
 	 * @return {Void}
 	 */
-    down(e) {
+    down(e: Event): void {
         e.preventDefault();
         // show the tip now so we can get the dimensions later
         this.nodes.container.classList.add("dragging");
 
         this.recalculate();
 
-        this.activeHandle = this.getHandle(e);
-
-        this.activeHandle.classList.add('active');
+        if (!Array.isArray(this.getHandle(e))) {
+            this.activeHandle = this.getHandle(e);
+        }
+        if (typeof this.activeHandle !== "boolean")
+            this.activeHandle.classList.add('active');
 
         this.setValueFromPosition(e);
 
-        if (this.touch) {
-            document.addEventListener("touchmove", this.listeners.move, false);
-            document.addEventListener("touchend", this.listeners.up, false);
-            document.addEventListener("touchcancel", this.listeners.up, false);
-        } else {
 
-            document.addEventListener("mousemove", this.listeners.move, false);
-            document.addEventListener("mouseup", this.listeners.up, false);
-        }
+        document.addEventListener("mousemove", this.listeners.move, false);
+        document.addEventListener("mouseup", this.listeners.up, false);
+
 
     }
 
 	/**
-	 * Mousemove / touchmove method
+	 * Mousemove 
 	 * @param  {Object} e
 	 * @return {Void}
 	 */
-    move(e) {
+    move(e: Event): void {
         this.setValueFromPosition(e);
 
         this.input.dispatchEvent(new Event("input"));
     }
 
 	/**
-	 * Mouseup / touchend method 
+	 * Mouseup 
 	 * @param  {Object} e
 	 * @return {Void}
 	 */
-    up(e) {
+    up(e: Event): void {
         this.nodes.container.classList.remove("dragging");
 
-        this.onEnd();
 
-        this.activeHandle.classList.remove('active');
+        if (typeof this.activeHandle !== "boolean")
+            this.activeHandle.classList.remove('active');
         this.activeHandle = false;
 
         document.removeEventListener("mousemove", this.listeners.move);
         document.removeEventListener("mouseup", this.listeners.up);
 
-        document.removeEventListener("touchmove", this.listeners.move);
-        document.removeEventListener("touchend", this.listeners.up);
-        document.removeEventListener("touchcancel", this.listeners.up);
 
         this.input.dispatchEvent(new Event("change"));
     }
@@ -315,15 +353,17 @@ class View {
 	 * Recache the dimensions
 	 * @return {Void}
 	 */
-    recalculate() {
-        let handle = [];
+    recalculate(): void {
+        let handle: Array<ClientRect> | ClientRect = [];
 
         if (this.config.multiple) {
-            this.nodes.handle.forEach((node, i) => {
-                handle[i] = node.getBoundingClientRect();
-            });
+            if (Array.isArray(this.nodes.handle))
+                this.nodes.handle.forEach((node, i) => {
+                    handle[i] = node.getBoundingClientRect();
+                });
         } else {
-            handle = this.nodes.handle.getBoundingClientRect()
+            if (!Array.isArray(this.nodes.handle))
+                handle = this.nodes.handle.getBoundingClientRect()
         }
 
         this.rects = {
@@ -336,7 +376,7 @@ class View {
 	 * Update the instance
 	 * @return {Void}
 	 */
-    update() {
+    update(): void {
         this.recalculate();
 
         this.accuracy = 0;
@@ -360,8 +400,8 @@ class View {
 	 * @param {Number} value
 	 * @param {Number} index
 	 */
-    setValue(value?, index?) {
-        const rects = this.rects;
+    setValue(value?: number | string, index?: number): boolean {
+        //const rects = this.rects;
         const nodes = this.nodes;
         const min = parseFloat(this.input.min);
         const max = parseFloat(this.input.max);
@@ -371,21 +411,23 @@ class View {
             return false;
         }
 
+
         if (this.config.multiple) {
             handle = this.activeHandle ? this.activeHandle : nodes.handle[index];
+
         }
 
         if (value === undefined) {
             value = this.input.value;
         }
 
-        value = parseFloat(value);
+        value = parseFloat(value.toString());
 
         value = value.toFixed(this.accuracy);
 
-        if (value < min) {
+        if (Number(value) < min) {
             value = min.toFixed(this.accuracy);
-        } else if (value > max) {
+        } else if (Number(value) > max) {
             value = max.toFixed(this.accuracy);
         }
 
@@ -412,11 +454,12 @@ class View {
             }
         } else {
             this.input.value = value;
-            nodes.tooltip.textContent = value;
+            if (!Array.isArray(nodes.tooltip))
+                nodes.tooltip.textContent = value;
         }
 
         // set bar size
-        this.setPosition(value, index);
+        this.setPosition(Number(value), index);
         //this.setPosition(value, index);
 
         this.onChange();
@@ -426,8 +469,8 @@ class View {
 	 * Set the bar size / position based on the value
 	 * @param {Number} value
 	 */
-    setPosition(value,index) {
-        let width;
+    setPosition(value: number, index: number): void {
+        let width:number;
 
         if (this.config.multiple) {
             let start = this.getPosition(this.input.values[0]);
@@ -450,7 +493,7 @@ class View {
 	 * @param  {Number} value The val to calculate the handle position
 	 * @return {Number}
 	 */
-    getPosition(value = this.input.value) {
+    getPosition(value: number = this.input.value): number {
         const min = parseFloat(this.input.min);
         const max = parseFloat(this.input.max);
 
@@ -461,7 +504,7 @@ class View {
 	 * Check whether the tooltips are colliding
 	 * @return {Boolean}
 	 */
-    tipsIntersecting() {
+    tipsIntersecting(): boolean {
         const nodes = this.nodes.tooltip;
         const a = nodes[0].getBoundingClientRect();
         const b = nodes[1].getBoundingClientRect();
@@ -470,12 +513,12 @@ class View {
     }
 
 	/**
-	 * Get the correct handle on mousedown / touchstart
+	 * Get the correct handle on mousedown
 	 * @param  {Object} e Event
 	 * @return {Obejct} HTMLElement
 	 */
-    getHandle(e) {
-        if (!this.config.multiple) {
+    getHandle(e: any): HTMLElementWithIndex {
+        if (!this.config.multiple && !Array.isArray(this.nodes.handle)) {
             return this.nodes.handle;
         }
 
@@ -499,7 +542,7 @@ class View {
 	 * Destroy the instance
 	 * @return {Void}
 	 */
-    destroy() {
+    destroy(): void {
         if (this.input.ranger) {
             // remove all event listeners
             this.unbind();
@@ -515,30 +558,21 @@ class View {
         }
     }
 
-    onInit() {
-        if (this.isFunction(this.config.onInit)) {
-            this.config.onInit.call(this, this.input.value);
-        }
-    }
 
-    onChange() {
+
+    onChange(): void {
         //if (this.isFunction(this.config.onChange)) {
         //    this.config.onChange.call(this, this.input.value);
         //this.eventObserver.notifyObservers("changeData");
-       // }
-   
+        // }
+
     }
 
-    onEnd() {
-        if (this.isFunction(this.config.onEnd)) {
-            this.config.onEnd.call(this, this.input.value);
-        }
-    }
 
-    bind() {
+
+    bind(): void {
         this.listeners = {
             down: this.down.bind(this),
-            touchstart: this.touchstart.bind(this),
             move: this.move.bind(this),
             up: this.up.bind(this),
             update: this.update.bind(this),
@@ -558,11 +592,8 @@ class View {
         // detect native change event
         this.input.addEventListener("change", this.listeners.change, false);
 
-        if (this.touch) {
-            this.nodes.container.addEventListener("touchstart", this.listeners.touchstart, false);
-        } else {
-            this.nodes.container.addEventListener("mousedown", this.listeners.down);
-        }
+        this.nodes.container.addEventListener("mousedown", this.listeners.down);
+
 
         // detect form reset
         if (this.input.form) {
@@ -570,13 +601,11 @@ class View {
         }
     }
 
-    unbind() {
+    unbind(): void {
 
-        if (this.touch) {
-            this.nodes.container.removeEventListener("touchstart", this.listeners.touchstart);
-        } else {
-            this.nodes.container.removeEventListener("mousedown", this.listeners.down);
-        }
+
+        this.nodes.container.removeEventListener("mousedown", this.listeners.down);
+
 
         // remove scroll listener
         document.removeEventListener("scroll", this.listeners.scroll);
@@ -600,8 +629,8 @@ class View {
 	 * @param  {String|Object}   b className or properties / attributes
 	 * @return {Object}
 	 */
-    createElement(type, obj) {
-        const el = document.createElement(type);
+    createElement(type: string, obj: String | Object): HTMLElementWithIndex {
+        const el:HTMLElementWithIndex = document.createElement(type);
 
         if (typeof obj === "string") {
             el.classList.add(obj);
@@ -618,13 +647,13 @@ class View {
         return el;
     }
 
-    isFunction(func) {
+    isFunction(func: Function): boolean {
         return func && typeof func === "function";
     }
 
     // throttler
     throttle(fn?, limit?, context?) {
-        let wait;
+        let wait:boolean;
         return function () {
             context = context || this;
             if (!wait) {
@@ -636,35 +665,58 @@ class View {
             }
         };
     }
+
+    updateConfig(property: string, val: string | number | boolean | number[]):void {
+
+        if (property !== "tooltip") {
+            this.input[property] = val;
+        } else {
+            if (typeof val === "boolean") {
+                this.nodes.container.classList.toggle("has-tooltip", val);
+            }
+        }
+
+        if (property === "showTooltips" && typeof val === "boolean") {
+            this.nodes.container.classList.toggle("show-tooltip", val);
+        }
+
+        this.config[property] = val;
+        this.config[property] = val;
+
+        if (property === "step") {
+            this.setValue();
+        }
+
+        if (property === "vertical" || property === "multiple") {
+            this.destroy();
+            setTimeout(() => {
+                this.init();
+            }, 10);
+        } else {
+            this.update();
+        }
+    }
 }
 
 
 
-function update(val) {
-    this.nodes.container.nextElementSibling.textContent = val;
-}
+
 
 class Config {
-	min = 0;
-	max = 400;
-	step = 10;
-	tooltip = true;
-	vertical = true;
-	multiple = true;
-	showTooltips = true;
-	color1 = "#3db13d";
-	color2 = "#ccc";
-    init = () => {
-		//view.init();
-	};
-	
-	destroy = () => {
-		//view.destroy(); 
-	};	
+    min = 0;
+    max = 400;
+    step = 10;
+    tooltip = true;
+    vertical = true;
+    multiple = true;
+    showTooltips = true;
+    color1 = "#3db13d";
+    color2 = "#ccc";
+
 
 }
 
 
 
-export { View};
+export { View };
 export { Config };
