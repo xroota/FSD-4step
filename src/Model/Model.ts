@@ -1,4 +1,4 @@
-import {EventObserver} from '../EventObserver/EventObserver';
+import { EventObserver } from '../EventObserver/EventObserver';
 
 interface ModelData {
   min: number,
@@ -14,18 +14,23 @@ class Model {
   public modelData: ModelData = {
     min: 100,
     max: 700,
-    step: 20,
+    step: 10,
     value: [200, 500],
     multiple: true
   }
 
+  setProperty(prop: string, value: number|number[]|string): void {
 
-
-  setValue(value: Array<number>){
-    this.modelData.value = value;
-    alert("model data set=" + value );
-    this.eventObserver.notifyObservers({message: "valueChange", value: this.modelData.value});
+    this.modelData[prop] = value;
+    this.eventObserver.notifyObservers({ message: "change", property: prop, value: this.modelData[prop] });
   }
+  setValue(index: number, value: number): void {
+    this.modelData.value[index] = value;
+    this.eventObserver.notifyObservers({ message: "change", property: "value", value: this.modelData.value });
+  }
+
+
+
 
 
 }
