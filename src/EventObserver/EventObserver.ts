@@ -1,3 +1,8 @@
+interface EventData{
+    message: string,
+    value: string|Array<number>|boolean|number,
+    property?: string
+}
 class EventObserver {
     observers : Array<Function>=[];
     addObserver = function (o: Function) {
@@ -22,7 +27,7 @@ class EventObserver {
         }
         throw new Error('could not find observer in list of observers');
     };
-    notifyObservers = function (data) {
+    notifyObservers = function (data:EventData) {
         // Make a copy of observer list in case the list
         // is mutated during the notifications.
         let observersSnapshot = this.observers.slice(0);
@@ -33,4 +38,4 @@ class EventObserver {
        
 }
 
-export { EventObserver };
+export { EventObserver , EventData};
