@@ -11,19 +11,28 @@
 
 import { EventObserver } from '../EventObserver/EventObserver';
 
-interface HTMLElementWithIndex extends HTMLElement {
+
+interface ElementWithIndex extends HTMLElement {
     index?: number;
 }
 
 interface ElementInput extends Element {
-    ranger? ,defaultValue?,value?,values?, min?,max?,step?,form?
+    ranger?: object,
+    defaultValue?: number,
+    value?: number,
+    values?: number[],
+    min?: number,
+    max?: number,
+    step?: number,
+    form?: Element,
+    type?: string
 }
 
 interface ViewConfig {
     min: number;
     max: number;
     step: number;
-    value?: Array<number>;
+    value?: number[];
     tooltip: boolean;
     vertical: boolean;
     multiple: boolean;
@@ -48,57 +57,60 @@ interface ViewConfig {
 class View {
 
     eventObserver = new EventObserver();
-    input :  ElementInput;
+    input: ElementInput;
     config: ViewConfig;
     mouseAxis: { x: string, y: string };
     trackSize: { x: string, y: string };
     trackPos: { x: string, y: string };;
     nodes: {
-        container: HTMLElement,
-        track: HTMLElement,
-        progress: HTMLElement,
-        handle: HTMLElementWithIndex | [HTMLElementWithIndex, HTMLElementWithIndex],
-        tooltip: HTMLElement | [HTMLElement, HTMLElement, HTMLElement]
+        container: Element,
+        track: Element,
+        progress: Element,
+        handle: ElementWithIndex | ElementWithIndex[],
+        tooltip: Element | Element[]
     };
     rects: {
         container: ClientRect,
-        handle: Array<ClientRect> | ClientRect
+        handle: ClientRect[] | ClientRect
     };
     axis: string;
-    activeHandle: HTMLElementWithIndex | boolean;
+    activeHandle: ElementWithIndex | boolean;
     listeners: {
-        down: EventListenerOrEventListenerObject,
-        move: EventListenerOrEventListenerObject,
-        up: EventListenerOrEventListenerObject,
-        update: EventListenerOrEventListenerObject,
-        change: EventListenerOrEventListenerObject,
-        reset: EventListenerOrEventListenerObject,
-        scroll?: EventListenerOrEventListenerObject,
-        resize?: EventListenerOrEventListenerObject,
+        down: EventListener,
+        move: EventListener,
+        up: EventListener,
+        update: EventListener,
+        change: EventListener,
+        reset: EventListener,
+        scroll?: EventListener,
+        resize?: EventListener,
     };
     accuracy: number;
 
 
-    constructor(input?: string | Element, config?: ViewConfig) {
+    constructor(input?: string | ElementInput, config?: ViewConfig) {
         const defaultConfig = {
             tooltip: true,
             showTooltips: true,
             multiple: false,
             classes: {
-                input: "ranger-input",
-                container: "ranger-container",
-                vertical: "ranger-vertical",
-                progress: "ranger-progress",
-                handle: "ranger-handle",
-                tooltip: "ranger-tooltip",
-                track: "ranger-track",
-                multiple: "ranger-multiple",
+                input: "slider__input",
+                container: "slider__container",
+                vertical: "slider--vertical",
+                progress: "slider__progress",
+                handle: "slider__handle",
+                tooltip: "slider__tooltip",
+                track: "slider__track",
+                multiple: "slider--multiple",
             }
         };
 
         // user has passed a CSS3 selector string
         if (typeof input === "string") {
-            input = document.querySelector(input);
+            let slider = document.querySelector(input);
+            input = this.createElement("input", defaultConfig.classes.input);
+            input.type = "ranger";
+            slider.appendChild(input);
         }
 
         this.input = input;
@@ -118,7 +130,6 @@ class View {
 	 * @return {Void}
 	 */
     init(): void {
-        let max: number = this.input.max;
         if (!this.input.ranger) {
             const props = { min: 0, max: 100, step: 1, value: this.input.value };
 
@@ -166,8 +177,8 @@ class View {
         const track = this.createElement("div", c.track);
         const progress = this.createElement("div", c.progress);
 
-        let handle: [HTMLElementWithIndex, HTMLElementWithIndex] | HTMLElementWithIndex = this.createElement("div", c.handle);
-        let tooltip: [HTMLElement, HTMLElement, HTMLElement] | HTMLElement = this.createElement("div", c.tooltip);
+        let handle: ElementWithIndex[] | ElementWithIndex = this.createElement("div", c.handle);
+        let tooltip: ElementWithIndex[] | ElementWithIndex = this.createElement("div", c.tooltip);
 
         track.appendChild(progress);
 
@@ -194,7 +205,7 @@ class View {
             container.classList.add(c.multiple);
         } else {
             progress.appendChild(handle);
-            handle.appendChild(tooltip);
+            (handle as ElementWithIndex).appendChild(tooltip);
         }
 
         this.nodes = { container, track, progress, handle, tooltip };
@@ -206,17 +217,17 @@ class View {
         }
 
         if (o.size) {
-            container.style[this.trackSize[this.axis]] = !isNaN(o.size)
+            (container as HTMLElement).style[this.trackSize[this.axis]] = !isNaN(o.size)
                 ? `${o.size}px`
                 : o.size.toString();
         }
 
         if (o.tooltip) {
-            container.classList.add("has-tooltip");
+            container.classList.add("slider--has-tooltip");
         }
 
         if (o.showTooltips) {
-            container.classList.add("show-tooltip");
+            container.classList.add("slider--show-tooltip");
         }
 
         this.input.parentNode.insertBefore(container, this.input);
@@ -235,9 +246,9 @@ class View {
     }
 
     setValueFromPosition(e: Event) {
-        const min = parseFloat(this.input.min);
-        const max = parseFloat(this.input.max);
-        const step = parseFloat(this.input.step);
+        const min = parseFloat(this.input.min.toString());
+        const max = parseFloat(this.input.max.toString());
+        const step = parseFloat(this.input.step.toString());
         const rect = this.rects;
         const axis = e[this.mouseAxis[this.axis]];
         const pos = axis - this.rects.container[this.trackPos[this.axis]];
@@ -249,15 +260,15 @@ class View {
             : pos / size * 100;
 
         // work out the value from the position
-        let value: any = position * (max - min) / 100 + min;
+        let value: number | string = position * (max - min) / 100 + min;
 
         // apply granularity (step)
         value = Math.ceil(value / step) * step;
 
         let index: number | boolean = false;
 
-        if (this.config.multiple && typeof this.activeHandle !== "boolean") {
-            index = this.activeHandle.index;
+        if (this.config.multiple ) {
+            index = (this.activeHandle as ElementWithIndex).index;
 
             switch (index) {
                 case 0:
@@ -276,7 +287,7 @@ class View {
         // Only update the value if it's different.
         // This allows the onChange event to be fired only on a step
         // and not all the time.
-        if (e.type === "mousedown" || parseFloat(value) !== parseFloat(this.input.value)) {
+        if (e.type === "mousedown" || parseFloat(value.toString()) !== parseFloat(this.input.value.toString())) {
             this.setValue(value, Number(index));
         }
     }
@@ -296,18 +307,17 @@ class View {
 	 * @param  {Object} e
 	 * @return {Void}
 	 */
-    down(e: Event): void {
+    down(e: MouseEvent): void {
         e.preventDefault();
         // show the tip now so we can get the dimensions later
-        this.nodes.container.classList.add("dragging");
+        this.nodes.container.classList.add("slider__handle--dragging");
 
         this.recalculate();
 
-        if (!Array.isArray(this.getHandle(e))) {
-            this.activeHandle = this.getHandle(e);
-        }
-        if (typeof this.activeHandle !== "boolean")
-            this.activeHandle.classList.add('active');
+
+        (this.activeHandle as ElementWithIndex) = this.getHandle(e);
+
+        (this.activeHandle as ElementWithIndex).classList.add('slider__handle--active');
 
         this.setValueFromPosition(e);
 
@@ -334,12 +344,12 @@ class View {
 	 * @param  {Object} e
 	 * @return {Void}
 	 */
-    up(e: Event): void {
-        this.nodes.container.classList.remove("dragging");
+    up(): void {
+        this.nodes.container.classList.remove("slider__handle--dragging");
 
 
-        if (typeof this.activeHandle !== "boolean")
-            this.activeHandle.classList.remove('active');
+
+        (this.activeHandle as ElementWithIndex).classList.remove('slider__handle--active');
         this.activeHandle = false;
 
         document.removeEventListener("mousemove", this.listeners.move);
@@ -354,16 +364,14 @@ class View {
 	 * @return {Void}
 	 */
     recalculate(): void {
-        let handle: Array<ClientRect> | ClientRect = [];
-
+        let handle: ClientRect[] | ClientRect = [];
         if (this.config.multiple) {
-            if (Array.isArray(this.nodes.handle))
-                this.nodes.handle.forEach((node, i) => {
-                    handle[i] = node.getBoundingClientRect();
-                });
+            (this.nodes.handle as ElementWithIndex[]).forEach((node, i) => {
+                handle[i] = node.getBoundingClientRect();
+            });
         } else {
-            if (!Array.isArray(this.nodes.handle))
-                handle = this.nodes.handle.getBoundingClientRect()
+
+            handle = (this.nodes.handle as ElementWithIndex).getBoundingClientRect()
         }
 
         this.rects = {
@@ -382,14 +390,14 @@ class View {
         this.accuracy = 0;
 
         // detect float
-        if (this.input.step.includes(".")) {
-            this.accuracy = (this.input.step.split('.')[1] || []).length;
+        if (this.input.step.toString().includes(".")) {
+            this.accuracy = (this.input.step.toString().split('.')[1] || []).length;
         }
 
         if (this.config.multiple) {
-            this.input.values.forEach((val, i) => {
-                this.setValue(val, i);
-            });
+                this.input.values.forEach((val, i) => {
+                    this.setValue(val, i);
+                }); 
         } else {
             this.setValue();
         }
@@ -403,8 +411,8 @@ class View {
     setValue(value?: number | string, index?: number): boolean {
         //const rects = this.rects;
         const nodes = this.nodes;
-        const min = parseFloat(this.input.min);
-        const max = parseFloat(this.input.max);
+        const min = parseFloat(this.input.min.toString());
+        const max = parseFloat(this.input.max.toString());
         let handle = nodes.handle;
 
         if (this.config.multiple && index === undefined) {
@@ -434,7 +442,7 @@ class View {
         // update the value
         if (this.config.multiple) {
             const values = this.input.values;
-            values[index] = value;
+            values[index] = Number(value);
 
             if (this.config.tooltip) {
                 // update the node so we can get the width / height
@@ -444,7 +452,7 @@ class View {
                 const intersecting = this.tipsIntersecting();
 
                 // ... and set the className where appropriate
-                nodes.container.classList.toggle("combined-tooltip", intersecting);
+                nodes.container.classList.toggle("slider--combined-tooltip", intersecting);
 
                 if (intersecting) {
                     // Format the combined tooltip.
@@ -453,13 +461,13 @@ class View {
                 }
             }
         } else {
-            this.input.value = value;
-            if (!Array.isArray(nodes.tooltip))
-                nodes.tooltip.textContent = value;
+            this.input.value = Number(value);
+            
+            (nodes.tooltip as ElementWithIndex).textContent = value;
         }
 
         // set bar size
-        this.setPosition(Number(value), index);
+        this.setPosition();
         //this.setPosition(value, index);
 
         this.onChange();
@@ -469,15 +477,15 @@ class View {
 	 * Set the bar size / position based on the value
 	 * @param {Number} value
 	 */
-    setPosition(value: number, index: number): void {
-        let width:number;
+    setPosition(): void {
+        let width: number;
 
         if (this.config.multiple) {
             let start = this.getPosition(this.input.values[0]);
             let end = this.getPosition(this.input.values[1]);
 
             // set the start point of the bar
-            this.nodes.progress.style[this.config.vertical ? "bottom" : "left"] = `${start}px`;
+            (this.nodes.progress as HTMLElement).style[this.config.vertical ? "bottom" : "left"] = `${start}px`;
 
             width = end - start;
         } else {
@@ -485,7 +493,7 @@ class View {
         }
 
         // set the end point of the bar
-        this.nodes.progress.style[this.trackSize[this.axis]] = `${width}px`;
+        (this.nodes.progress as HTMLElement).style[this.trackSize[this.axis]] = `${width}px`;
     }
 
 	/**
@@ -494,8 +502,8 @@ class View {
 	 * @return {Number}
 	 */
     getPosition(value: number = this.input.value): number {
-        const min = parseFloat(this.input.min);
-        const max = parseFloat(this.input.max);
+        const min = parseFloat(this.input.min.toString());
+        const max = parseFloat(this.input.max.toString());
 
         return (value - min) / (max - min) * this.rects.container[this.trackSize[this.axis]];
     }
@@ -517,18 +525,18 @@ class View {
 	 * @param  {Object} e Event
 	 * @return {Obejct} HTMLElement
 	 */
-    getHandle(e: any): HTMLElementWithIndex {
-        if (!this.config.multiple && !Array.isArray(this.nodes.handle)) {
-            return this.nodes.handle;
+    getHandle(e: MouseEvent): ElementWithIndex {
+        if (!this.config.multiple) {
+            return (this.nodes.handle as ElementWithIndex);
         }
 
         const r = this.rects;
         const distA = Math.abs(e[this.mouseAxis[this.axis]] - r.handle[0][this.trackPos[this.axis]]);
         const distB = Math.abs(e[this.mouseAxis[this.axis]] - r.handle[1][this.trackPos[this.axis]]);
-        const handle = e.target.closest(`.${this.config.classes.handle}`);
+        const handle = (e.target as ElementWithIndex).closest(`.${this.config.classes.handle}`);
 
         if (handle) {
-            return handle;
+            return (handle as ElementWithIndex);
         } else {
             if (distA > distB) {
                 return this.nodes.handle[1];
@@ -629,8 +637,8 @@ class View {
 	 * @param  {String|Object}   b className or properties / attributes
 	 * @return {Object}
 	 */
-    createElement(type: string, obj: String | Object): HTMLElementWithIndex {
-        const el:HTMLElementWithIndex = document.createElement(type);
+    createElement(type: string, obj: String | Object): ElementWithIndex {
+        const el: ElementWithIndex = document.createElement(type);
 
         if (typeof obj === "string") {
             el.classList.add(obj);
@@ -652,8 +660,8 @@ class View {
     }
 
     // throttler
-    throttle(fn?, limit?, context?) {
-        let wait:boolean;
+    throttle(fn?: EventListener, limit?: number, context?: object) {
+        let wait: boolean;
         return function () {
             context = context || this;
             if (!wait) {
@@ -666,18 +674,18 @@ class View {
         };
     }
 
-    updateConfig(property: string, val: string | number | boolean | number[]):void {
+    updateConfig(property: string, val: string | number | boolean | number[]): void {
 
         if (property !== "tooltip") {
             this.input[property] = val;
         } else {
             if (typeof val === "boolean") {
-                this.nodes.container.classList.toggle("has-tooltip", val);
+                this.nodes.container.classList.toggle("slider--has-tooltip", val);
             }
         }
 
         if (property === "showTooltips" && typeof val === "boolean") {
-            this.nodes.container.classList.toggle("show-tooltip", val);
+            this.nodes.container.classList.toggle("slider--show-tooltip", val);
         }
 
         this.config[property] = val;
@@ -718,5 +726,5 @@ class Config {
 
 
 
-export { View };
+export { View , ViewConfig};
 export { Config };
