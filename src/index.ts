@@ -58,13 +58,13 @@ const presenter = new Presenter(model, view);
 
 
 
-function updateModel(val) {
-    const prop = this.property;
+function updateModel(prop,val, slider)  {
+
     if (prop === 0 || prop === 1) {
-        model.setValue(prop, val);
+        slider.slider("update", {property:prop, value: val});
     }
     else
-        model.setProperty(prop, val);
+        slider.slider("update", {property:prop, value: val});
 }
 
 function updateView(val) {
@@ -82,9 +82,15 @@ module Slider {
         element: JQuery;
         options: object;
         model: Model;
+        //view: View;
+        //presenter: Presenter;
+        dateCreate: string;
 
 
-        constructor(element: JQuery, options: object) {
+
+
+
+        constructor(element: JQuery, options: object, outputElement?: string) {
 
             this.element = element;
             this.options = options;
@@ -99,13 +105,10 @@ module Slider {
                 else viewConfig[key] = options[key];
             }
 
-
             this.model = new Model(modelConfig);
 
-            const view = new View(element, Object.assign({}, this.model.modelData, viewConfig));
-            const presenter = new Presenter(this.model, view);
-            this.OnCreate();
-
+            let view = new View(element, Object.assign({}, this.model.modelData, viewConfig));
+            let presenter = new Presenter(this.model, view, outputElement);
 
         }
 
@@ -113,8 +116,8 @@ module Slider {
         OnCreate() {
             //this.element.css('color', this.options.color).css('background-color', this.options.backgroundColor);
         }
-        getValue() {
-            return this.model.modelData.value;
+        method(name, opts) {
+            alert("aa");
         }
 
     }
@@ -130,36 +133,79 @@ declare global {
         $: JQuery;
     }
     interface JQuery {
-        Slider: (
-            opts?: object,
+        slider: (
+            opts?: object | string,
+            outputElement?: string
         ) => JQuery<Element> | string | number | number[] | boolean;
 
     }
 }
 
 //jquery plugin wrapper.
-(function (w, $) {
+(function initialization(w, $: JQueryStatic) {
     if (!$) return false;
 
-    $.fn.extend({
-        Slider: function (opts) {
 
-            //defaults
-            //var defaults: Coloring.GreenifyOptions = new Coloring.GreenifyOptions('#0F0', '#000');
 
-            //var opts = $.extend(defaults, opts);
+
+
+
+
+    $.fn.slider = function (opts, opts2?) {
+
+        //defaults
+        //var defaults: Coloring.GreenifyOptions = new Coloring.GreenifyOptions('#0F0', '#000');
+
+        //var opts = $.extend(defaults, opts);
+
+        let methods = {
+            init: function (element: JQuery, options: object, outputElement?: string){
+
+                let modelConfig = new ModelData();
+                let viewConfig = new ViewConfig();
+
+                for (let key in options) {
+                    if (key in modelConfig) {
+                        modelConfig[key] = options[key];
+                    }
+                    else viewConfig[key] = options[key];
+                }
+
+                this.model = new Model(modelConfig);
+
+                let view = new View(element, Object.assign({}, this.model.modelData, viewConfig));
+                let presenter = new Presenter(this.model, view, opts2);
+                var $this = $(this);
+                $(this).data('slider', presenter);
+
+            }
+        };
+
+
+
+        if (opts === "update") {
+            var $this = $(this),
+            data = $this.data('slider');
+
+            let slider = $(this).data('slider');
+            slider.setProperty(opts2["property"], opts2["value"],);
+
+        }
+
+        else
 
             return this.each(function () {
-                var o = opts;
-                var obj = $(this);
-                new Slider.Init(obj, o);
+                let o = opts;
+                let obj = $(this);
+                //let slider = new Slider.Init(obj, o, outputElement);
+                methods.init.call(this, obj, (o as object), opts2);
 
             });
-        }
-    });
+    }
+        ;
 })(window, jQuery);
 
-let configSlider2 = Object.assign({}, {
+let configSlider1 = Object.assign({}, {
     tooltip: true,
     vertical: false,
     showTooltips: true,
@@ -167,7 +213,7 @@ let configSlider2 = Object.assign({}, {
     color2: "#431010",
 }, { min: 0, max: 12000, step: 10, value: [2000, 7000] });
 
-let configSlider3 = Object.assign({}, {
+let configSlider2 = Object.assign({}, {
     tooltip: true,
     vertical: false,
     showTooltips: true,
@@ -177,13 +223,10 @@ let configSlider3 = Object.assign({}, {
 
 
 
-$(".slider7").Slider(configSlider3);
-$(".slider2").Slider(configSlider2);
-var customValue: any = document.querySelector(".slider2 .slider__input");
-
-var ss = customValue["value"];
-var dd = 11;
-
+let slider1: any = $(".slider1").slider(configSlider1, "#range-value");
+let slider2: any  = $(".slider2").slider(configSlider2, "#range-value2");
+//slider1.slider("update");
+//slider2.slider("update");
 var gui = new dat.GUI({ autoPlace: false });
 
 
@@ -192,7 +235,7 @@ customContainer.appendChild(gui.domElement);
 
 const f1 = gui.addFolder("Config");
 const ft = gui.addFolder("Tooltips");
-const f2 = gui.addFolder("Values");
+//const f2 = gui.addFolder("Values");
 const f3 = gui.addFolder("Color");
 const steps = {
     "0.001": 0.001,
@@ -208,29 +251,79 @@ const steps = {
 
 
 
-var dd = customContainer["min"];
-f1.add(view.config, "min").step(1).onChange(updateModel);
-f1.add(view.config, "max").step(1).onChange(updateModel);
-f1.add(view.config, "step", steps).onChange(updateModel);
-f1.add(view.config, "vertical").onChange(updateView);
-f1.add(view.config, "multiple").onChange(updateModel);
+f1.add(configSlider1, "min").step(1).onChange((val)=>{updateModel("min",val,slider1)});
+f1.add(configSlider1, "max").step(1).onChange((val)=>{updateModel("max",val,slider1)});
+f1.add(configSlider1, "step", steps).onChange((val)=>{updateModel("step",val,slider1)});
+f1.add(configSlider1, "vertical").onChange((val)=>{updateModel("vertical",val,slider1)});
+//f1.add(configSlider1, "multiple").onChange((val)=>{updateModel("multiple",val,slider1)});
 
-f2.add(customValue,"values").onChange(updateModel).listen();
-f2.add(customValue.value, 1).onChange(updateModel).listen();
+//f2.add(configSlider2, "values").onChange(updateModel).listen();
+//f2.add(configSlider2.value, 1).onChange(updateModel).listen();
 
-ft.add(view.config, "tooltip").onChange(updateView);
-ft.add(view.config, "showTooltips").name("Always show?").onChange(updateView);
+ft.add(configSlider1, "tooltip").onChange((val)=>{updateModel("tooltip",val,slider1)});
+ft.add(configSlider1, "showTooltips").name("Always show?").onChange((val)=>{updateModel("showTooltips",val,slider1)});
 
 f1.open();
 ft.open();
 
 
-f3.addColor(viewConfig, 'color1').name('Primary').onChange(val => {
+f3.addColor(configSlider1, 'color1').name('Primary').onChange(val => {
     document.body.style.setProperty("--primary", val);
 });
-f3.addColor(viewConfig, 'color2').name('Secondary').onChange(val => {
+f3.addColor(configSlider1, 'color2').name('Secondary').onChange(val => {
     document.body.style.setProperty("--secondary", val);
 });
 
-f2.open();
+//f2.open();
 f3.open();
+
+
+var gui2 = new dat.GUI({ autoPlace: false });
+
+
+var customContainer2 = document.getElementById('my-gui-container2');
+customContainer2.appendChild(gui2.domElement);
+
+const f21 = gui2.addFolder("Config");
+const ft2 = gui2.addFolder("Tooltips");
+//const f2 = gui.addFolder("Values");
+const f23 = gui2.addFolder("Color");
+const steps2 = {
+    "0.001": 0.001,
+    "0.01": 0.01,
+    "0.1": 0.1,
+    "1": 1,
+    "1.25": 1.25,
+    "2.0": 2.0,
+    "2.5": 2.5,
+    "5.0": 5.0,
+    "10.0": 10.0
+};
+
+
+
+f21.add(configSlider2, "min").step(1).onChange((val)=>{updateModel("min",val,slider2)});
+f21.add(configSlider2, "max").step(1).onChange((val)=>{updateModel("max",val,slider2)});
+f21.add(configSlider2, "step", steps2).onChange((val)=>{updateModel("step",val,slider2)});
+f21.add(configSlider2, "vertical").onChange((val)=>{updateModel("vertical",val,slider2)});
+//f21.add(configSlider2, "multiple").onChange((val)=>{updateModel("multiple",val,slider2)});
+
+//f2.add(configSlider2, "values").onChange(updateModel).listen();
+//f2.add(configSlider2.value, 1).onChange(updateModel).listen();
+
+ft2.add(configSlider2, "tooltip").onChange((val)=>{updateModel("tooltip",val,slider2)});
+ft2.add(configSlider2, "showTooltips").name("Always show?").onChange((val)=>{updateModel("showTooltips",val,slider2)});
+
+f21.open();
+ft2.open();
+
+
+f23.addColor(configSlider2, 'color1').name('Primary').onChange(val => {
+    document.body.style.setProperty("--primary", val);
+});
+f23.addColor(configSlider2, 'color2').name('Secondary').onChange(val => {
+    document.body.style.setProperty("--secondary", val);
+});
+
+//f2.open();
+f23.open();
