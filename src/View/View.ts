@@ -321,7 +321,7 @@ class View {
         if (!this.config.multiple) {this.input.values = [this.input.value];
         
         }
-        $(this.input).attr("values",this.input.value);
+        $(this.input).attr("value",this.input.value);
         this.eventObserver.notifyObservers({ message: "valueChange", value: this.input.values });
 
 
@@ -687,10 +687,12 @@ class View {
         };
     }
 
-    updateConfig(property: string, val: string | number | boolean | number[]): void {
+    updateConfig(property: string, val: string | number | boolean | number[]) :  any {
 
         if (property !== "tooltip") {
             this.input[property] = val;
+            $(this.input).attr(property,val.toString());
+            
         } else {
             if (typeof val === "boolean") {
                 (this.nodes.container).toggleClass(SLIDER_CLASSES.hasTooltip, val);
@@ -702,7 +704,7 @@ class View {
         }
 
         this.config[property] = val;
-        this.config[property] = val;
+
 
         if (property === "step") {
             this.setValue();
