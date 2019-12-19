@@ -106,22 +106,12 @@ class View {
         };
 
         // user has passed a CSS3 selector string
-        //if (typeof input === "string") {
-        this.slider = $(element);
-        //$(input).add("input")
-        //       .addClass(SLIDER_CLASSES.input)
-        //        .attr( "type", "ranger");
-        //slider.appendChild(input);
-        //}
-        
+        this.slider = $(element);      
         this.input = $("<input/>");
         $(this.input).addClass(SLIDER_CLASSES.input)
             .attr("type", "range");
         $(this.slider).append(this.input);
-
-
-
-
+    
         this.config = Object.assign({}, defaultConfig, config);
 
         this.mouseAxis = { x: "clientX", y: "clientY" };
@@ -183,10 +173,6 @@ class View {
         const o = this.config;
         const c = SLIDER_CLASSES;
 
-        
-        //this.input = $(this.slider).find("input");
-
-
         const container = $("<div/>").addClass(c.container);
         const track = $("<div/>").addClass(c.track);
         const progress = $("<div/>").addClass(c.progress);
@@ -231,7 +217,6 @@ class View {
             $(container).addClass(c.vertical);
         }
 
-
         if (o.tooltip) {
             $(container).addClass(SLIDER_CLASSES.hasTooltip);
         }
@@ -239,7 +224,6 @@ class View {
         if (o.showTooltips) {
             $(container).addClass(SLIDER_CLASSES.showTooltip);
         }
-
 
         if (o.color1) {
             document.body.style.setProperty("--primary", o["color1"]);
@@ -249,16 +233,8 @@ class View {
         }
 
         $(this.slider).append(container);
-
-
-        //this.input.parentNode.insertBefore(container, this.input);
-
         $(this.input).insertBefore($(track))
-        //container.insertBefore(this.input, track);
-
         $(this.input).addClass(c.input)
-        //this.input.classList.add(c.input);
-
         this.bind();
 
         this.update();
@@ -266,7 +242,6 @@ class View {
 
     reset(): void {
         this.setValue(this.input.defaultValue);
-
     }
 
     setValueFromPosition(e: Event) {
@@ -323,8 +298,6 @@ class View {
         }
         $(this.input).attr("value",this.input.value);
         this.eventObserver.notifyObservers({ message: "valueChange", value: this.input.values });
-
-
     }
 
 
@@ -341,13 +314,11 @@ class View {
 
         this.recalculate();
 
-
         (this.activeHandle as ElementWithIndex) = this.getHandle(e);
 
         $(this.activeHandle as ElementWithIndex).addClass(SLIDER_CLASSES.handleActive);
 
         this.setValueFromPosition(e);
-
 
         document.addEventListener("mousemove", this.listeners.move, false);
         document.addEventListener("mouseup", this.listeners.up, false);
@@ -364,8 +335,6 @@ class View {
         this.setValueFromPosition(e);
 
         $(this.input).trigger("input");
-
-        //this.input.dispatchEvent(new Event("input"));
     }
 
 	/**
@@ -385,7 +354,6 @@ class View {
         document.removeEventListener("mouseup", this.listeners.up);
 
         $(this.input).trigger("change");
-        //this.input.dispatchEvent(new Event("change"));
     }
 
 	/**
@@ -394,7 +362,7 @@ class View {
 	 */
     recalculate(): void {
         let handle: ClientRect[] | ClientRect = [];
-        if (this.config.multiple) {
+        if (this.config.multiple  && Array.isArray(this.nodes.handle) ) {
             (this.nodes.handle as ElementWithIndex[]).forEach((node, i) => {
                 handle[i] = $(node)[0].getBoundingClientRect();
             });
@@ -448,9 +416,6 @@ class View {
             return false;
         }
 
-
-  
-
         if (value === undefined) {
             value = this.input.value;
         }
@@ -494,9 +459,7 @@ class View {
 
         // set bar size
         this.setPosition();
-        //this.setPosition(value, index);
 
-        this.onChange();
     }
 
 	/**
@@ -561,15 +524,11 @@ class View {
         const distB = Math.abs(e[this.mouseAxis[this.axis]] - r.handle[1][this.trackPos[this.axis]]);
         const handle = $(e.target).closest(`.${SLIDER_CLASSES.handle}`);
 
-        //if (handle) {
-        //    return (handle as ElementWithIndex);
-       // } else {
             if (distA > distB) {
                 return (this.nodes.handle[1] as ElementWithIndex);
             } else {
                 return (this.nodes.handle[0] as ElementWithIndex);
             }
-     //   }
     }
 
 	/**
@@ -580,14 +539,9 @@ class View {
         if (this.input.ranger) {
             // remove all event listeners
             this.unbind();
-
             // remove the className from the input
-
             $(this.input).removeClass(SLIDER_CLASSES.input);
-            //this.input.classList.remove(SLIDER_CLASSES.input);
 
-            // kill all nodes
-            //this.nodes.container.parentNode.replaceChild(this.input, this.nodes.container);
             $(this.nodes.container).remove();
             // remove the reference from the input
             delete (this.input.ranger);
@@ -595,14 +549,6 @@ class View {
     }
 
 
-
-    onChange(): void {
-        //if (this.isFunction(this.config.onChange)) {
-        //    this.config.onChange.call(this, this.input.value);
-        //this.eventObserver.notifyObservers("changeData");
-        // }
-
-    }
 
 
 
@@ -687,7 +633,7 @@ class View {
         };
     }
 
-    updateConfig(property: string, val: string | number | boolean | number[]) :  any {
+updateConfig(property: string, val: string | number | boolean | number[]) :  any {
 
         if (property !== "tooltip") {
             this.input[property] = val;
@@ -714,18 +660,13 @@ class View {
             this.destroy();
             setTimeout(() => {
                 this.init();
+
             }, 10);
         } else {
             this.update();
         }
     }
 }
-
-
-
-
-
-
 
 
 export { View, ViewConfig };
