@@ -13,7 +13,7 @@ class Presenter {
         this.view = view;
         this.outputElement = $(outputElement);
         this.setOutput();
-        $(this.outputElement).change( this.setModelValue.bind(this));
+        $(this.outputElement).change(this.setModelValue.bind(this));
 
     }
 
@@ -21,7 +21,6 @@ class Presenter {
 
     dataViewChange(data: EventData): void {
         if (data.message === "valueChange") {
-            //alert(data.message + ' ' + data.value);
             if (Array.isArray(data.value))
                 this.model.setProperty("value", data.value);
         }
@@ -29,11 +28,15 @@ class Presenter {
 
     dataModelChange(data: EventData): void {
         if (data.message === "change") {
-            //alert(data.message + ' ' + data.value);
             switch (data.property) {
-                case "value": this.view.setValue(data.value[0], 0);
+                case "value":
+                    this.view.setValue(data.value[0], 0);
                     if (Array.isArray(data.value) && data.value.length > 0) this.view.setValue(data.value[1], 1);
                     this.setOutput();
+                    break;
+                case "multiple":
+                    this.view.updateConfig("value", this.model.modelData.value);
+                    this.view.updateConfig(data.property, data.value);
                     break;
                 default: this.view.updateConfig(data.property, data.value);
             }
@@ -53,9 +56,9 @@ class Presenter {
 
     }
 
-    setModelValue(){
-        let val:string    = $(this.outputElement).val().toString();
-        let valArr: number[] =val.split("-").map(Number);
+    setModelValue() {
+        let val: string = $(this.outputElement).val().toString();
+        let valArr: number[] = val.split("-").map(Number);
         this.model.setProperty("value", valArr);
 
 
@@ -63,12 +66,22 @@ class Presenter {
 
     setProperty(prop: string, value: number | number[] | string): void {
         this.model.setProperty
-            if (prop in this.model.modelData) {
-                this.model.setProperty(prop,value);
-            }
-            else {
-                this.view.updateConfig(prop,value);
-            }
+        if (prop in this.model.modelData) {
+            this.model.setProperty(prop, value);
+        }
+        else {
+            this.view.updateConfig(prop, value);
+        }
+
+
+    }
+
+    getProperty(prop: string) {
+        this.model.setProperty
+        if (prop in this.model.modelData) {
+            return this.model.getProperty(prop);
+        }
+
 
 
     }
