@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import '../dist/index.scss';
-
+import './index.scss';
 import * as dat from 'dat.gui';
 import './jquery.slider.ts';
 
+import { ViewConfig } from './View/View';
 
 
-class sliderPanel {
+
+class SliderPanel {
     updateModel(prop, val, slider) {
 
         slider.slider("update", { property: prop, value: val });
     }
-    
+
     constructor(slider, elementOutput, config) {
         var gui = new dat.GUI({ autoPlace: false });
-
-
         var customContainer = document.getElementById(elementOutput);
         customContainer.appendChild(gui.domElement);
 
         const f1 = gui.addFolder("Config");
         const ft = gui.addFolder("Tooltips");
-        const f3 = gui.addFolder("Color");
         const steps = {
             "0.001": 0.001,
             "0.01": 0.01,
@@ -46,71 +44,115 @@ class sliderPanel {
             "2.5": 2.5,
             "5.0": 5.0,
             "10.0": 10.0,
+            "100": 100.0,
             "1000.0": 1000.0
         };
-
-
 
         f1.add(config, "min").step(1).onChange((val) => { this.updateModel("min", val, slider) });
         f1.add(config, "max").step(1).onChange((val) => { this.updateModel("max", val, slider) });
         f1.add(config, "step", steps).onChange((val) => { this.updateModel("step", val, slider) });
         f1.add(config, "multiple").onChange((val) => { this.updateModel("multiple", val, slider) });
         f1.add(config, "vertical").onChange((val) => { this.updateModel("vertical", val, slider) });
-
         ft.add(config, "tooltip").onChange((val) => { this.updateModel("tooltip", val, slider) });
         ft.add(config, "showTooltips").name("Always show?").onChange((val) => { this.updateModel("showTooltips", val, slider) });
 
         f1.open();
         ft.open();
 
-        f3.addColor(config, 'color1').name('Primary').onChange(val => {
-            document.body.style.setProperty("--primary", val);
-        });
-        f3.addColor(config, 'color2').name('Secondary').onChange(val => {
-            document.body.style.setProperty("--secondary", val);
-        });
-
-        //f2.open();
-        f3.open();
 
     }
 }
 
 
-let configSlider1 = Object.assign({}, {
+class ColorPanel {
+    updateModel(prop, val, slider) {
+
+        slider.slider("update", { property: prop, value: val });
+    }
+
+    constructor(slider, elementOutput, config) {
+        var gui = new dat.GUI({ autoPlace: false });
+
+        var customContainer = document.getElementById(elementOutput);
+        customContainer.appendChild(gui.domElement);
+        const f = gui.addFolder("Color");
+
+        f.addColor(config, 'color1').name('Primary').onChange(val => {
+            document.body.style.setProperty("--primary", val);
+        });
+        f.addColor(config, 'color2').name('Secondary').onChange(val => {
+            document.body.style.setProperty("--secondary", val);
+        });
+        f.open();
+
+    }
+}
+
+let configSlider1 : ViewConfig= {
     tooltip: true,
     vertical: false,
     showTooltips: true,
-    color1: "#98890c",
-    color2: "#431010",
-    multiple:  null
-}, { min: 0, max: 12000, step: 1, value: [2000, 7000] });
+    min: 0,
+    max: 12000,
+    step: 1,
+    value: [2000, 7000]
+};
 
-let configSlider2 = Object.assign({}, {
+let configSlider2 : ViewConfig= {
     tooltip: true,
     vertical: false,
     showTooltips: true,
-    color1: "#98890c",
-    color2: "#431010",
-    multiple:  null
-}, { min: 0, max: 20000, step: 10, value: [2000] });
+    min: 0,
+    max: 20000,
+    step: 10,
+    value: [2000]
+};
 
 
-let configSlider3 = Object.assign({}, {
+let configSlider3: ViewConfig = {
+    tooltip: true,
+    vertical: true,
+    showTooltips: true,
+    min: 0,
+    max: 1000000,
+    step: 1000,
+    value: [234000,567000]
+};
+
+
+let configSlider4: ViewConfig = {
     tooltip: true,
     vertical: true,
     showTooltips: true,
     color1: "#98890c",
     color2: "#431010",
-}, { min: 0, max: 1000000, step: 1000, value: [234000] , multiple:  null});
+    min: 3000,
+    max: 15000,
+    step: 100,
+    value: [7600]
+};
 
-let slider1 : any = $(".slider1").slider(configSlider1, "#range-value");
-configSlider1.multiple = slider1.slider("getProperty",{property:"multiple"});
-let slider2 : any= $(".slider2").slider(configSlider2, "#range-value2");
-configSlider2.multiple = slider2.slider("getProperty",{property:"multiple"});
-let slider3 : any = $(".slider3").slider(configSlider3, "#range-value3");
-configSlider3.multiple = slider3.slider("getProperty",{property:"multiple"});
-new sliderPanel(slider1,"my-gui-container",configSlider1)
-new sliderPanel(slider2,"my-gui-container2",configSlider2)
-new sliderPanel(slider3,"my-gui-container3",configSlider3)
+let slider1: any = $(".slider-panel__slider1").slider(configSlider1, "#slider-panel__value1");
+configSlider1.multiple = slider1.slider("getProperty", { property: "multiple" });
+let slider2: any = $(".slider-panel__slider2").slider(configSlider2, "#slider-panel__value2");
+configSlider2.multiple = slider2.slider("getProperty", { property: "multiple" });
+let slider3: any = $(".slider-panel__slider3").slider(configSlider3, "#slider-panel__value3");
+configSlider3.multiple = slider3.slider("getProperty", { property: "multiple" });
+let slider4: any = $(".slider-panel__slider4").slider(configSlider4, "#slider-panel__value4");
+configSlider4.multiple = slider4.slider("getProperty", { property: "multiple" });
+
+
+new SliderPanel(slider1, "slider-panel__container1", configSlider1)
+new SliderPanel(slider2, "slider-panel__container2", configSlider2)
+new SliderPanel(slider3, "slider-panel__container3", configSlider3)
+new SliderPanel(slider4, "slider-panel__container4", configSlider4)
+
+
+let configColor = {
+
+    color1: "#98890c",
+    color2: "#431010",
+
+};
+new ColorPanel(slider1, "color-config__container", configColor)
 
