@@ -45,7 +45,7 @@ class Presenter {
 
 
     }
-    setOutput() {
+    setOutput() : void {
         let value = this.model.modelData.value;
         if (this.outputElement.is("input")) {
             this.outputElement.val(value[1] ? (value as number[]).join("-") : value[0]);
@@ -56,7 +56,7 @@ class Presenter {
 
     }
 
-    setModelValue() {
+    setModelValue() : void{
         let val: string = $(this.outputElement).val().toString();
         let valArr: number[] = val.split("-").map(Number);
         this.model.setProperty("value", valArr);
@@ -76,7 +76,7 @@ class Presenter {
 
     }
 
-    getProperty(prop: string) {
+    getProperty(prop: string) : number[] | number| string | boolean {
         this.model.setProperty
         if (prop in this.model.modelData) {
             return this.model.getProperty(prop);

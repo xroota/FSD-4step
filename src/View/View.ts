@@ -106,12 +106,12 @@ class View {
         };
 
         // user has passed a CSS3 selector string
-        this.slider = $(element);      
+        this.slider = $(element);
         this.input = $("<input/>");
         $(this.input).addClass(SLIDER_CLASSES.input)
             .attr("type", "range");
         $(this.slider).append(this.input);
-    
+
         this.config = Object.assign({}, defaultConfig, config);
 
         this.mouseAxis = { x: "clientX", y: "clientY" };
@@ -134,13 +134,13 @@ class View {
             for (let prop in props) {
                 // prop is missing, so add it
                 if (!this.input[prop]) {
-                    $(this.input).attr(prop , props[prop]);
+                    $(this.input).attr(prop, props[prop]);
                     this.input[prop] = props[prop];
                 }
 
                 // prop set in config
                 if (this.config[prop] !== undefined) {
-                    this.input.attr(prop , this.config[prop]);
+                    this.input.attr(prop, this.config[prop]);
                     this.input[prop] = this.config[prop];
                 }
             }
@@ -293,10 +293,11 @@ class View {
 
     change(): void {
         //this.onChange()
-        if (!this.config.multiple) {this.input.values = [this.input.value];
-        
+        if (!this.config.multiple) {
+            this.input.values = [this.input.value];
+
         }
-        $(this.input).attr("value",this.input.value);
+        $(this.input).attr("value", this.input.value);
         this.eventObserver.notifyObservers({ message: "valueChange", value: this.input.values });
     }
 
@@ -362,7 +363,7 @@ class View {
 	 */
     recalculate(): void {
         let handle: ClientRect[] | ClientRect = [];
-        if (this.config.multiple  && Array.isArray(this.nodes.handle) ) {
+        if (this.config.multiple && Array.isArray(this.nodes.handle)) {
             (this.nodes.handle as ElementWithIndex[]).forEach((node, i) => {
                 handle[i] = $(node)[0].getBoundingClientRect();
             });
@@ -410,7 +411,7 @@ class View {
         const nodes = this.nodes;
         const min = parseFloat(this.input.min.toString());
         const max = parseFloat(this.input.max.toString());
-        let handle : ElementWithIndex | ElementWithIndex[]  = nodes.handle;
+        let handle: ElementWithIndex | ElementWithIndex[] = nodes.handle;
 
         if (this.config.multiple && index === undefined) {
             return false;
@@ -448,7 +449,7 @@ class View {
                 if (intersecting) {
                     // Format the combined tooltip.
                     // Only show single value if they both match, otherwise show both seperated by a hyphen
-                    $(nodes.tooltip[2]).text( values[0] === values[1] ? values[0] : `${values[0]} - ${values[1]}`);
+                    $(nodes.tooltip[2]).text(values[0] === values[1] ? values[0] : `${values[0]} - ${values[1]}`);
                 }
             }
         } else {
@@ -474,7 +475,7 @@ class View {
             let end = this.getPosition(this.input.values[1]);
 
             // set the start point of the bar
-            $(this.nodes.progress).css(this.config.vertical ? "bottom" : "left" , `${start}px`);
+            $(this.nodes.progress).css(this.config.vertical ? "bottom" : "left", `${start}px`);
 
             width = end - start;
         } else {
@@ -482,7 +483,7 @@ class View {
         }
 
         // set the end point of the bar
-        $(this.nodes.progress).css(this.trackSize[this.axis] , `${width}px`);
+        $(this.nodes.progress).css(this.trackSize[this.axis], `${width}px`);
     }
 
 	/**
@@ -524,11 +525,11 @@ class View {
         const distB = Math.abs(e[this.mouseAxis[this.axis]] - r.handle[1][this.trackPos[this.axis]]);
         const handle = $(e.target).closest(`.${SLIDER_CLASSES.handle}`);
 
-            if (distA > distB) {
-                return (this.nodes.handle[1] as ElementWithIndex);
-            } else {
-                return (this.nodes.handle[0] as ElementWithIndex);
-            }
+        if (distA > distB) {
+            return (this.nodes.handle[1] as ElementWithIndex);
+        } else {
+            return (this.nodes.handle[0] as ElementWithIndex);
+        }
     }
 
 	/**
@@ -613,7 +614,7 @@ class View {
 	 * @param  {String|Object}   b className or properties / attributes
 	 * @return {Object}
 	 */
- 
+
     isFunction(func: Function): boolean {
         return func && typeof func === "function";
     }
@@ -633,12 +634,12 @@ class View {
         };
     }
 
-updateConfig(property: string, val: string | number | boolean | number[]) :  any {
+    updateConfig(property: string, val: string | number | boolean | number[]): void {
 
         if (property !== "tooltip") {
             this.input[property] = val;
-            $(this.input).attr(property,val.toString());
-            
+            $(this.input).attr(property, val.toString());
+
         } else {
             if (typeof val === "boolean") {
                 (this.nodes.container).toggleClass(SLIDER_CLASSES.hasTooltip, val);
