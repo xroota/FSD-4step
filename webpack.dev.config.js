@@ -15,7 +15,9 @@
  */
 
 const path = require('path');
+const fs = require('fs')
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
   watch: true,
@@ -27,9 +29,19 @@ module.exports = {
       $: 'jquery',
       jQuery: 'jquery'
     }),
+    new HtmlWebpackPlugin({
+      //template: `${PAGES_DIR}/index.pug`,
+      template: `./src/index.pug`,
+      filename: '../dist/index.html',
+      inject: true
+    })
   ],
   module: {
     rules: [
+      {
+        test: /\.pug$/,
+        loader: 'pug-loader'
+      },
       {
         test: /\.ts$/,
         use: 'ts-loader',
