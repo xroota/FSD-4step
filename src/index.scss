@@ -1,0 +1,41 @@
+@import url("https://fonts.googleapis.com/css?family=Inconsolata:400,400i,700");
+
+body {
+	margin: 0;
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	align-items: flex-start;
+	justify-content: center;
+	//flex-flow: column;
+	font-family: "Inconsolata", sans-serif;
+}
+
+#output {
+	position: fixed;
+	left: 10px;
+	top: 10px;
+	border: 1px dashed #999;
+	width: 200px;
+	height: 150px;
+	overflow: auto;
+}
+
+.color-config{
+	position: fixed;
+	left: 20px;
+	top: 600px;
+}
+
+.slider-panel{
+	width: 400px;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.slider-panel__output-value{
+	margin-bottom: 10px;
+	width: 100%;
+}
