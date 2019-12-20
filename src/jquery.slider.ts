@@ -10,21 +10,22 @@ declare global {
     interface JQuery {
         slider: (
             opts?: object | string,
-            opts2?: string
+            opts2?: string,
+
         ) => JQuery<Element> | string | number | number[] | boolean;
 
     }
 }
 
 //jquery plugin wrapper.
-(function (w, $) {
+(function (w : Window, $ : JQueryStatic) {
     if (!$) return false;
 
-    $.fn.slider = function (opts, opts2?) {
+    $.fn.slider = function (opts: object | string, opts2?:object|string) {
 
 
-        let methods = {
-            init: function (element: JQuery, options: object, outputElement?: string) {
+        let methods  = {
+            init: function (element: JQuery, options: object, outputElement?: string) : void {
 
                 let modelConfig = new ModelData();
                 let viewConfig = new ViewConfig();
@@ -39,13 +40,14 @@ declare global {
                 this.model = new Model(modelConfig);
 
                 let view = new View(element, Object.assign({}, this.model.modelData, viewConfig));
-                let presenter = new Presenter(this.model, view, opts2);
+                let presenter = new Presenter(this.model, view, (opts2 as string));
                 var $this = $(this);
                 $(this).data('slider', presenter);
 
             },
 
-            update: function (element: JQuery, options: object, options2?: string) {
+            update: function (element: JQuery, options: object, options2?: string) : void
+             {
 
                 let $this = $(this),
                     data = $this.data('slider');
@@ -54,7 +56,7 @@ declare global {
                 slider.setProperty(opts2["property"], opts2["value"]);
 
             },
-            getProperty: function (element: JQuery, options: object, options2?: string) {
+            getProperty: function (element: JQuery, options: object, options2?: string) : number[] | number | string | boolean {
                 let $this = $(this),
                     data = $this.data('slider');
 
