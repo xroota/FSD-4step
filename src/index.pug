@@ -1,0 +1,16 @@
+html(lang="ru")
+  head
+    meta(charset="utf-8")
+    title= "Тестовая страница слайедера"
+  body
+    
+ 
+    div.color-config#color-config__container
+   
+    mixin sliderPanel(num)
+      - for (i=1; i< num+1; i++)
+        .slider-panel
+          div(class="slider " + "slider-panel__slider"+i)
+          div(id="slider-panel__container"+i)
+            input(class="slider-panel__output-value" id="slider-panel__value"+i )
+    +sliderPanel(4)
