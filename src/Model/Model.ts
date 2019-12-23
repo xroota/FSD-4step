@@ -4,8 +4,8 @@ const DEFAULT_DATA = {
   min: 1,
   max: 100,
   step: 1,
-  value: [10, 50],
-  multiple: true
+  value: [50],
+  multiple: false
 }
 class ModelData {
   min: number = DEFAULT_DATA.min;
@@ -19,17 +19,17 @@ class Model {
   eventObserver = new EventObserver();
   modelData: ModelData;
 
-  constructor(data: ModelData) {
-    this.modelData = data;
+  constructor(data?: ModelData) {
+    this.modelData = Object.assign({}, DEFAULT_DATA, data);
     this.checkMultiple();
     this.checkValue();
   }
 
-  checkMultiple()  : void {
+  checkMultiple(): void {
     this.modelData.multiple = this.modelData.value.length > 1 ? true : false;
 
   }
-  checkValue() : void {
+  checkValue(): void {
 
     if (this.modelData.value[0] > this.modelData.max) { this.modelData.value[0] = this.modelData.max };
     if (this.modelData.value[0] < this.modelData.min) { this.modelData.value[0] = this.modelData.min };
@@ -67,7 +67,7 @@ class Model {
 
 
   }
-  getProperty(prop: string) : number[]  |number | string | boolean  {
+  getProperty(prop: string): number[] | number | string | boolean {
     return this.modelData[prop];
   }
 

@@ -52,10 +52,10 @@ class ViewConfig {
     max: number;
     step: number;
     value?: number[];
-    tooltip: boolean;
-    vertical: boolean;
+    tooltip?: boolean;
+    vertical?: boolean;
     multiple?: boolean;
-    showTooltips: boolean;
+    showTooltips?: boolean;
     color1?: string;
     color2?: string;
 

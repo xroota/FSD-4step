@@ -1,11 +1,11 @@
-interface EventData{
+interface EventData {
     message: string,
-    value: string|Array<number>|boolean|number,
+    value: string | Array<number> | boolean | number,
     property?: string
 }
 class EventObserver {
-    observers : Array<Function>=[];
-    addObserver = function (o: Function) {
+    observers: Function[] = [];
+    addObserver = function (o: Function): void {
         if (typeof o !== 'function') {
             throw new Error('observer must be a function');
         }
@@ -17,7 +17,7 @@ class EventObserver {
         }
         this.observers.push(o);
     };
-    removeObserver(o: Function) {
+    removeObserver(o: Function): void {
         for (var i = 0, ilen = this.observers.length; i < ilen; i += 1) {
             var observer = this.observers[i];
             if (observer === o) {
@@ -27,7 +27,7 @@ class EventObserver {
         }
         throw new Error('could not find observer in list of observers');
     };
-    notifyObservers = function (data:EventData) {
+    notifyObservers(data: EventData): void {
         // Make a copy of observer list in case the list
         // is mutated during the notifications.
         let observersSnapshot = this.observers.slice(0);
@@ -35,7 +35,7 @@ class EventObserver {
             observersSnapshot[i](data);
         }
     };
-       
+
 }
 
-export { EventObserver , EventData};
+export { EventObserver, EventData };
