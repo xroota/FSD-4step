@@ -16,4 +16,5 @@
 
 import '../src/Model/Model.spec'
 import '../src/Presenter/Presenter.spec'
+import '../src/View/View.spec'
 
