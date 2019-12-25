@@ -52,6 +52,7 @@ class ViewConfig {
     max: number;
     step: number;
     value?: number[];
+    defaultValue?: number[];
     tooltip?: boolean;
     vertical?: boolean;
     multiple?: boolean;
@@ -104,6 +105,7 @@ class View {
             color1: "#3db13d",
             color2: "#ccc",
         };
+        const defaultData = { min: 0, max: 100, step: 1, value: [50] };
 
         // user has passed a CSS3 selector string
         this.slider = $(element);
@@ -112,83 +114,53 @@ class View {
             .attr("type", "range");
         $(this.slider).append(this.input);
 
-        this.config = Object.assign({}, defaultConfig, config);
+        this.config = Object.assign({}, defaultConfig, defaultData, config);
+
+        if (!this.config.defaultValue) {
+            this.config.defaultValue = this.config.value;
+        }
+        for (let prop in defaultData) {
+            // prop set in config
+            if (this.config[prop] !== undefined) {
+                this.input.attr(prop, this.config[prop]);
+            }
+        }
 
         this.mouseAxis = { x: "clientX", y: "clientY" };
         this.trackSize = { x: "width", y: "height" };
         this.trackPos = { x: "left", y: "top" };
 
-        this.init();
-
+        this.render();
 
     }
 
-	/**
-	 * Initialise the instance
-	 * @return {Void}
-	 */
-    init(): void {
-        if (!this.input.ranger) {
-            const props = { min: 0, max: 100, step: 1, value: this.input.value };
 
-            for (let prop in props) {
-                // prop is missing, so add it
-                if (!this.input[prop]) {
-                    $(this.input).attr(prop, props[prop]);
-                    this.input[prop] = props[prop];
-                }
-
-                // prop set in config
-                if (this.config[prop] !== undefined) {
-                    this.input.attr(prop, this.config[prop]);
-                    this.input[prop] = this.config[prop];
-                }
-            }
-
-            if (!this.input.defaultValue) {
-                this.input.defaultValue = this.input.value;
-            }
-
-            this.axis = !this.config.vertical ? "x" : "y";
-
-            this.input.ranger = this;
-
-            if (this.config.multiple) {
-                this.input.values = [];
-
-                if (this.config.value) {
-                    this.input.values = this.config.value;
-                }
-            }
-
-            this.render();
-        }
-    }
 
 	/**
 	 * Render the instance
 	 * @return {Void}
 	 */
     render(): void {
-        const o = this.config;
-        const c = SLIDER_CLASSES;
+        this.axis = !this.config.vertical ? "x" : "y";
 
-        const container = $("<div/>").addClass(c.container);
-        const track = $("<div/>").addClass(c.track);
-        const progress = $("<div/>").addClass(c.progress);
+        this.input.ranger = this;
 
-        let handle: ElementWithIndex | ElementWithIndex[] = $("<div/>").addClass(c.handle);
-        let tooltip: JQuery | JQuery[] = $("<div/>").addClass(c.tooltip);
+        const container = $("<div/>").addClass(SLIDER_CLASSES.container);
+        const track = $("<div/>").addClass(SLIDER_CLASSES.track);
+        const progress = $("<div/>").addClass(SLIDER_CLASSES.progress);
+
+        let handle: ElementWithIndex | ElementWithIndex[] = $("<div/>").addClass(SLIDER_CLASSES.handle);
+        let tooltip: JQuery | JQuery[] = $("<div/>").addClass(SLIDER_CLASSES.tooltip);
 
 
         $(track).append(progress);
 
-        if (o.multiple) {
-            handle = [$("<div/>").addClass(c.handle), $("<div/>").addClass(c.handle)];
+        if (this.config.multiple) {
+            handle = [$("<div/>").addClass(SLIDER_CLASSES.handle), $("<div/>").addClass(SLIDER_CLASSES.handle)];
             tooltip = [
-                $("<div/>").addClass(c.tooltip),
-                $("<div/>").addClass(c.tooltip),
-                $("<div/>").addClass(c.tooltip)
+                $("<div/>").addClass(SLIDER_CLASSES.tooltip),
+                $("<div/>").addClass(SLIDER_CLASSES.tooltip),
+                $("<div/>").addClass(SLIDER_CLASSES.tooltip)
             ];
 
             handle.forEach((node, i) => {
@@ -197,13 +169,13 @@ class View {
                 $(node).append(tooltip[i]);
             });
 
-            if (o.vertical) {
+            if (this.config.vertical) {
                 $(progress).append(handle[0]);
             }
 
             $(progress).append(tooltip[2]);
 
-            $(container).addClass(c.multiple);
+            $(container).addClass(SLIDER_CLASSES.multiple);
         } else {
             $(progress).append(handle);
             $(handle).append(tooltip);
@@ -213,41 +185,44 @@ class View {
 
         $(container).append(track);
 
-        if (o.vertical) {
-            $(container).addClass(c.vertical);
+        if (this.config.vertical) {
+            $(container).addClass(SLIDER_CLASSES.vertical);
         }
 
-        if (o.tooltip) {
+        if (this.config.tooltip) {
             $(container).addClass(SLIDER_CLASSES.hasTooltip);
         }
 
-        if (o.showTooltips) {
+        if (this.config.showTooltips) {
             $(container).addClass(SLIDER_CLASSES.showTooltip);
         }
 
-        if (o.color1) {
-            document.body.style.setProperty("--primary", o["color1"]);
+        if (this.config.color1) {
+            document.body.style.setProperty("--primary", this.config["color1"]);
         }
-        if (o.color2) {
-            document.body.style.setProperty("--secondary", o["color2"]);
+        if (this.config.color2) {
+            document.body.style.setProperty("--secondary", this.config["color2"]);
         }
 
         $(this.slider).append(container);
         $(this.input).insertBefore($(track))
-        $(this.input).addClass(c.input)
+        $(this.input).addClass(SLIDER_CLASSES.input)
         this.bind();
 
         this.update();
     }
 
     reset(): void {
-        this.setValue(this.input.defaultValue);
+        this.setValue(this.config.defaultValue[0], 0);
+        if (this.config.multiple) {
+            this.setValue(this.config.defaultValue[1], 1);
+        }
     }
 
     setValueFromPosition(e: Event) {
-        const min = parseFloat(this.input.min.toString());
-        const max = parseFloat(this.input.max.toString());
-        const step = parseFloat(this.input.step.toString());
+        const min = parseFloat(this.config.min.toString());
+        const max = parseFloat(this.config.max.toString());
+        const step = parseFloat(this.config.step.toString());
         const rect = this.rects;
         const axis = e[this.mouseAxis[this.axis]];
         const pos = axis - this.rects.container[this.trackPos[this.axis]];
@@ -259,7 +234,7 @@ class View {
             : pos / size * 100;
 
         // work out the value from the position
-        let value: number | string = position * (max - min) / 100 + min;
+        let value: number  = position * (max - min) / 100 + min;
 
         // apply granularity (step)
         value = Math.ceil(value / step) * step;
@@ -271,13 +246,13 @@ class View {
 
             switch (index) {
                 case 0:
-                    if (value >= this.input.values[1]) {
-                        value = this.input.values[1];
+                    if (value >= this.config.value[1]) {
+                        value = this.config.value[1];
                     }
                     break;
                 case 1:
-                    if (value <= this.input.values[0]) {
-                        value = this.input.values[0];
+                    if (value <= this.config.value[0]) {
+                        value = this.config.value[0];
                     }
                     break;
             }
@@ -286,19 +261,15 @@ class View {
         // Only update the value if it's different.
         // This allows the onChange event to be fired only on a step
         // and not all the time.
-        if (e.type === "mousedown" || parseFloat(value.toString()) !== parseFloat(this.input.value.toString())) {
+        if (e.type === "mousedown" || parseFloat(value.toString()) !== parseFloat(this.config.value.toString())) {
             this.setValue(value, Number(index));
         }
     }
 
     change(): void {
-        //this.onChange()
-        if (!this.config.multiple) {
-            this.input.values = [this.input.value];
 
-        }
-        $(this.input).attr("value", this.input.value);
-        this.eventObserver.notifyObservers({ message: "valueChange", value: this.input.values });
+        $(this.input).attr("value", this.config.value[0]);
+        this.eventObserver.notifyObservers({ message: "valueChange", value: this.config.value });
     }
 
 
@@ -388,12 +359,12 @@ class View {
         this.accuracy = 0;
 
         // detect float
-        if (this.input.step.toString().includes(".")) {
-            this.accuracy = (this.input.step.toString().split('.')[1] || []).length;
+        if (this.config.step.toString().includes(".")) {
+            this.accuracy = (this.config.step.toString().split('.')[1] || []).length;
         }
 
         if (this.config.multiple) {
-            this.input.values.forEach((val, i) => {
+            this.config.value.forEach((val, i) => {
                 this.setValue(val, i);
             });
         } else {
@@ -409,8 +380,8 @@ class View {
     setValue(value?: number | string, index?: number): boolean {
         //const rects = this.rects;
         const nodes = this.nodes;
-        const min = parseFloat(this.input.min.toString());
-        const max = parseFloat(this.input.max.toString());
+        const min = parseFloat(this.config.min.toString());
+        const max = parseFloat(this.config.max.toString());
         let handle: ElementWithIndex | ElementWithIndex[] = nodes.handle;
 
         if (this.config.multiple && index === undefined) {
@@ -418,7 +389,7 @@ class View {
         }
 
         if (value === undefined) {
-            value = this.input.value;
+            value = this.config.value[0];
         }
 
         value = parseFloat(value.toString());
@@ -433,7 +404,8 @@ class View {
 
         // update the value
         if (this.config.multiple) {
-            const values = this.input.values;
+            this.config.value[index] = Number(value);
+            const values = this.config.value;
             values[index] = Number(value);
 
             if (this.config.tooltip) {
@@ -453,8 +425,7 @@ class View {
                 }
             }
         } else {
-            this.input.value = Number(value);
-
+            this.config.value = [Number(value)];
             $(nodes.tooltip).text(value);
         }
 
@@ -471,8 +442,8 @@ class View {
         let width: number;
 
         if (this.config.multiple) {
-            let start = this.getPosition(this.input.values[0]);
-            let end = this.getPosition(this.input.values[1]);
+            let start = this.getPosition(this.config.value[0]);
+            let end = this.getPosition(this.config.value[1]);
 
             // set the start point of the bar
             $(this.nodes.progress).css(this.config.vertical ? "bottom" : "left", `${start}px`);
@@ -491,9 +462,9 @@ class View {
 	 * @param  {Number} value The val to calculate the handle position
 	 * @return {Number}
 	 */
-    getPosition(value: number = this.input.value): number {
-        const min = parseFloat(this.input.min.toString());
-        const max = parseFloat(this.input.max.toString());
+    getPosition(value: number = this.config.value[0]): number {
+        const min = parseFloat(this.config.min.toString());
+        const max = parseFloat(this.config.max.toString());
 
         return (value - min) / (max - min) * this.rects.container[this.trackSize[this.axis]];
     }
@@ -608,16 +579,7 @@ class View {
 
         this.listeners = null;
     }
-	/**
-	 * Create DOM element helper
-	 * @param  {String}   a nodeName
-	 * @param  {String|Object}   b className or properties / attributes
-	 * @return {Object}
-	 */
 
-    isFunction(func: Function): boolean {
-        return func && typeof func === "function";
-    }
 
     // throttler
     throttle(fn?: EventListener, limit?: number, context?: object) {
@@ -634,39 +596,47 @@ class View {
         };
     }
 
-    updateConfig(property: string, val: string | number | boolean | number[]): void {
+    setProperty(property: string, val: string | number | boolean | number[]): void {
+        if (this.config.hasOwnProperty(property)) {
 
-        if (property !== "tooltip") {
-            this.input[property] = val;
-            $(this.input).attr(property, val.toString());
 
-        } else {
-            if (typeof val === "boolean") {
-                (this.nodes.container).toggleClass(SLIDER_CLASSES.hasTooltip, val);
+            if (property !== "tooltip") {
+                this.input[property] = val;
+                $(this.input).attr(property, val.toString());
+
+            } else {
+                if (typeof val === "boolean") {
+                    (this.nodes.container).toggleClass(SLIDER_CLASSES.hasTooltip, val);
+                }
+            }
+
+            if (property === "showTooltips" && typeof val === "boolean") {
+                $(this.nodes.container).toggleClass(SLIDER_CLASSES.showTooltip, val);
+            }
+
+            this.config[property] = val;
+
+
+            if (property === "step") {
+                this.setValue();
+            }
+
+            if (property === "vertical" || property === "multiple") {
+                this.destroy();
+                setTimeout(() => {
+                    this.render();
+
+                }, 10);
+            } else {
+                this.update();
             }
         }
-
-        if (property === "showTooltips" && typeof val === "boolean") {
-            $(this.nodes.container).toggleClass(SLIDER_CLASSES.showTooltip, val);
-        }
-
-        this.config[property] = val;
-
-
-        if (property === "step") {
-            this.setValue();
-        }
-
-        if (property === "vertical" || property === "multiple") {
-            this.destroy();
-            setTimeout(() => {
-                this.init();
-
-            }, 10);
-        } else {
-            this.update();
-        }
     }
+
+    getProperty(prop: string): number[] | number | string | boolean {
+        return this.config[prop];
+    }
+
 }
 
 
