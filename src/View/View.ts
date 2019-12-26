@@ -234,7 +234,7 @@ class View {
             : pos / size * 100;
 
         // work out the value from the position
-        let value: number  = position * (max - min) / 100 + min;
+        let value: number = position * (max - min) / 100 + min;
 
         // apply granularity (step)
         value = Math.ceil(value / step) * step;
@@ -292,8 +292,8 @@ class View {
 
         this.setValueFromPosition(e);
 
-        document.addEventListener("mousemove", this.listeners.move, false);
-        document.addEventListener("mouseup", this.listeners.up, false);
+        $(document).on("mousemove", this.listeners.move);
+        $(document).on("mouseup", this.listeners.up);
 
 
     }
@@ -306,7 +306,7 @@ class View {
     move(e: Event): void {
         this.setValueFromPosition(e);
 
-        $(this.input).trigger("input");
+        //$(this.input).trigger("input");
     }
 
 	/**
@@ -322,8 +322,8 @@ class View {
         $(this.activeHandle as ElementWithIndex).removeClass(SLIDER_CLASSES.handleActive);
         this.activeHandle = false;
 
-        document.removeEventListener("mousemove", this.listeners.move);
-        document.removeEventListener("mouseup", this.listeners.up);
+        $(document).off("mousemove", this.listeners.move as any);
+        $(document).off("mouseup", this.listeners.up as any);
 
         $(this.input).trigger("change");
     }
@@ -347,6 +347,7 @@ class View {
             handle: handle,
             container: $(this.nodes.container)[0].getBoundingClientRect()
         };
+
     }
 
 	/**
@@ -414,6 +415,7 @@ class View {
 
                 // check if tips are intersecting...
                 const intersecting = this.tipsIntersecting();
+        
 
                 // ... and set the className where appropriate
                 $(nodes.container).toggleClass(SLIDER_CLASSES.combinedTooltip, intersecting);
@@ -477,6 +479,7 @@ class View {
         const nodes = this.nodes.tooltip;
         const a = $(nodes[0])[0].getBoundingClientRect();
         const b = $(nodes[1])[0].getBoundingClientRect();
+        console.log()
 
         return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
     }
@@ -511,8 +514,6 @@ class View {
         if (this.input.ranger) {
             // remove all event listeners
             this.unbind();
-            // remove the className from the input
-            $(this.input).removeClass(SLIDER_CLASSES.input);
 
             $(this.nodes.container).remove();
             // remove the reference from the input
@@ -538,10 +539,10 @@ class View {
         this.listeners.resize = this.throttle(this.listeners.update, 50);
 
         // throttle the scroll callback for performance
-        document.addEventListener("scroll", this.listeners.scroll, false);
+        $(document).on("scroll", this.listeners.scroll);
 
         // throttle the resize callback for performance
-        window.addEventListener("resize", this.listeners.resize, false);
+        $(window).on("resize", this.listeners.resize);
 
         // detect native change event
         $(this.input).on("change", this.listeners.change);
@@ -551,31 +552,23 @@ class View {
         $(this.nodes.container).on("mousedown", this.listeners.down);
 
 
-        // detect form reset
-        if (this.input.form) {
-            this.input.form.addEventListener("reset", this.listeners.reset, false);
-        }
+
     }
 
     unbind(): void {
 
-
-        $(this.nodes.container).off("mousedown", "*");
+        
+        $(this.nodes.container).off("mousedown", this.listeners.down as any);
 
 
         // remove scroll listener
-        document.removeEventListener("scroll", this.listeners.scroll);
+        $(document).off("scroll", this.listeners.scroll as any);
 
         // remove resize listener
-        window.removeEventListener("resize", this.listeners.resize);
+        $(window).off("resize", this.listeners.resize as any);
 
         // remove input listener
-        $(this.input).off("change", "*");
-
-        // remove form listener
-        if (this.input.form) {
-            this.input.form.removeEventListener("reset", this.listeners.reset);
-        }
+        $(this.input).off("change", this.listeners.change as any);
 
         this.listeners = null;
     }
