@@ -1,84 +1,67 @@
-import { View, ViewConfig } from './View/View';
-import { Model, ModelData } from './Model/Model';
+import { View } from './View/View';
+import { Model } from './Model/Model';
 import { Presenter } from './Presenter/Presenter';
 import './jquery.slider.scss';
 
 declare global {
-    interface Window {
-        $: JQuery;
-    }
-    interface JQuery {
-        slider: (
-            opts?: object | string,
-            opts2?: string,
+  interface Window {
+    $: JQuery;
+  }
+  interface JQuery {
+    slider: (
+      opts?: object | string,
+      opts2?: object | string,
 
-        ) => JQuery<Element> | string | number | number[] | boolean;
+    ) => JQuery<Element> | string | number | number[] | boolean;
 
-    }
+  }
 }
 
-//jquery plugin wrapper.
-(function (w : Window, $ : JQueryStatic) {
-    if (!$) return false;
+// jquery plugin wrapper.
+(function initialization(w: Window, $: JQueryStatic) {
+  if (!$) return false;
+  const $plugin = $;
+  $plugin.fn.slider = function plugin(
+    opts: object | string,
+    opts2?: {property?:string;value?:number | number[] | string},
+  ) {
+    const methods = {
+      init(element: JQuery, options: object): void {
+        this.model = new Model(options);
+        const view = new View(element, ({ ...options, ...this.model.modelData }));
+        const presenter = new Presenter(this.model, view, (opts2 as string));
+        $(this).data('slider', presenter);
+      },
 
-    $.fn.slider = function (opts: object | string, opts2?:object|string) {
+      update(element: JQuery, options: {property?:string;value?:number | number[] | string}): void {
+        const slider = $(this).data('slider');
+        slider.setProperty(options.property, options.value);
+      },
+      getProperty(
+        element: JQuery,
+        options: {property?:string},
+      ): number[] | number | string | boolean {
+        const slider = $(this).data('slider');
 
+        return slider.getProperty(options.property);
+      },
 
-        let methods  = {
-            init: function (element: JQuery, options: object, outputElement?: string) : void {
+      destroy(): void {
+        let slider = $(this).data('slider');
+        slider.destroy();
+        slider = null;
+        $(this).data('slider', null);
+      },
 
-                let modelConfig = new ModelData();
-                let viewConfig = new ViewConfig();
-
-                for (let key in options) {
-                    if (key in modelConfig) {
-                        modelConfig[key] = options[key];
-                    }
-                    else viewConfig[key] = options[key];
-                }
-
-                this.model = new Model(modelConfig);
-
-                let view = new View(element, Object.assign({}, this.model.modelData, viewConfig));
-                let presenter = new Presenter(this.model, view, (opts2 as string));
-                var $this = $(this);
-                $(this).data('slider', presenter);
-
-            },
-
-            update: function (element: JQuery, options: object, options2?: string) : void
-             {
-
-                let $this = $(this),
-                    data = $this.data('slider');
-
-                let slider = $(this).data('slider');
-                slider.setProperty(opts2["property"], opts2["value"]);
-
-            },
-            getProperty: function (element: JQuery, options: object, options2?: string) : number[] | number | string | boolean {
-                let $this = $(this),
-                    data = $this.data('slider');
-
-                let slider = $(this).data('slider');
-
-                return slider.getProperty(opts2["property"]);
-            }
-
-        };
-        if (methods[opts as string]) {
-            
-            return methods[opts as string].call(this, opts, opts2)
-
-        }
-        else
-
-            return this.each(function () {
-                let o = opts;
-                let obj = $(this);
-                methods.init.call(this, obj, (o as object), opts2);
-
-            });
+    };
+    if (methods[opts as string]) {
+      return methods[opts as string].call(this, opts, opts2);
     }
-        ;
-})(window, jQuery);
+    return this.each(function func() {
+      const o = opts;
+      const obj = $(this);
+      methods.init.call(this, obj, (o as object), opts2);
+    });
+  };
+  return true;
+}(window, jQuery));
