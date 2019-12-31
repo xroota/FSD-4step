@@ -5,72 +5,101 @@ const DEFAULT_DATA = {
   max: 100,
   step: 1,
   value: [50],
-  multiple: false
-}
-class ModelData {
-  min: number = DEFAULT_DATA.min;
-  max: number = DEFAULT_DATA.max;
-  step: number = DEFAULT_DATA.step;
-  value: number[] = DEFAULT_DATA.value;
-  multiple?: boolean = DEFAULT_DATA.multiple;
+  multiple: false,
+};
+interface ModelData {
+  min?: number;
+
+  max?: number;
+
+  step?: number;
+
+  value?: number[];
+
+  multiple?: boolean
 }
 
 class Model {
   eventObserver = new EventObserver();
-  modelData: ModelData;
 
-  constructor(data?: ModelData) {
-    this.modelData = Object.assign({}, DEFAULT_DATA, data);
+  modelData : {
+    min: number,
+
+    max: number,
+
+    step: number,
+
+    value: number[],
+
+    multiple?: boolean
+  };
+
+  constructor(data: ModelData = {}) {
+    this.modelData = { ...DEFAULT_DATA };
+
+
+    const newData = this.modelData;
+
+    Object.keys(data).map((key) => {
+      if (typeof newData[key] !== 'undefined') {
+        newData[key] = data[key];
+      }
+      return true;
+    });
+
     this.checkMultiple();
     this.checkValue();
   }
 
   checkMultiple(): void {
-    this.modelData.multiple = this.modelData.value.length > 1 ? true : false;
-
+    this.modelData.multiple = this.modelData.value.length > 1;
   }
+
   checkValue(): void {
-
-    if (this.modelData.value[0] > this.modelData.max) { this.modelData.value[0] = this.modelData.max };
-    if (this.modelData.value[0] < this.modelData.min) { this.modelData.value[0] = this.modelData.min };
-    if (this.modelData.multiple) {
-      if (this.modelData.value[1] > this.modelData.max) { this.modelData.value[1] = this.modelData.max };
-      if (this.modelData.value[1] < this.modelData.min) { this.modelData.value[1] = this.modelData.min };
-      if (this.modelData.value[0] >= this.modelData.value[1]) { this.modelData.value[1] = this.modelData.value[0] };
+    if (this.modelData.value[0] > this.modelData.max) {
+      this.modelData.value[0] = this.modelData.max;
     }
-
+    if (this.modelData.value[0] < this.modelData.min) {
+      this.modelData.value[0] = this.modelData.min;
+    }
+    if (this.modelData.multiple) {
+      if (this.modelData.value[1] > this.modelData.max) {
+        this.modelData.value[1] = this.modelData.max;
+      }
+      if (this.modelData.value[1] < this.modelData.min) {
+        this.modelData.value[1] = this.modelData.min;
+      }
+      if (this.modelData.value[0] >= this.modelData.value[1]) {
+        const val = this.modelData.value[0];
+        this.modelData.value[1] = val;
+      }
+    }
   }
 
   setProperty(prop: string, value: number | number[] | string): void {
-    let val = this.modelData.value;
+    const val = this.modelData.value;
     this.modelData[prop] = value;
-    if (prop === "value") {
+    if (prop === 'value') {
       this.checkMultiple();
     }
 
-    if (prop === "multiple") {
-      if ((typeof value === "boolean") && (value === true)) {
+    if (prop === 'multiple') {
+      if ((typeof value === 'boolean') && (value === true)) {
         this.modelData.value = [this.modelData.value[0], this.modelData.max];
-      }
-      else {
+      } else {
         this.modelData.value = [this.modelData.value[0]];
       }
-
-
     }
 
     this.checkValue();
     if (val !== this.modelData.value) {
-      this.eventObserver.notifyObservers({ message: "change", property: "value", value: this.modelData.value });
+      this.eventObserver.notifyObservers({ message: 'change', property: 'value', value: this.modelData.value });
     }
-    this.eventObserver.notifyObservers({ message: "change", property: prop, value: this.modelData[prop] });
-
-
+    this.eventObserver.notifyObservers({ message: 'change', property: prop, value: this.modelData[prop] });
   }
+
   getProperty(prop: string): number[] | number | string | boolean {
     return this.modelData[prop];
   }
-
-
 }
-export { Model, ModelData };  
+export { Model, ModelData };
