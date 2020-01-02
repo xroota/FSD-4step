@@ -27,13 +27,15 @@ declare global {
   ) {
     const methods = {
       init(element: JQuery, options: object): void {
-        this.model = new Model(options);
-        const view = new View(element, ({ ...options, ...this.model.modelData }));
+        const sliderOptions = { ...options, ...$(element).data() };
+        this.model = new Model(sliderOptions);
+        const view = new View(element, ({ ...sliderOptions, ...this.model.config }));
         const presenter = new Presenter(this.model, view, (opts2 as string));
         $(this).data('slider', presenter);
       },
 
-      update(element: JQuery, options: {property?:string;value?:number | number[] | string}): void {
+      setProperty(element: JQuery,
+        options: {property?:string;value?:number | number[] | string}): void {
         const slider = $(this).data('slider');
         slider.setProperty(options.property, options.value);
       },
