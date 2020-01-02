@@ -29,80 +29,72 @@ const SLIDER_CLASSES = {
 
 };
 
-interface ElementWithIndex extends JQuery {
+
+const DEFAULT_CONFIG = {
+  tooltip: true,
+  showTooltips: true,
+  vertical: false,
+  color1: '#3db13d',
+  color2: '#ccc',
+  min: 0,
+  max: 100,
+  step: 1,
+  value: [50],
+};
+
+
+interface IJQueryWithIndex extends JQuery {
   indexElement?: number,
 }
 
 
-interface ElementInput extends JQuery {
-  ranger?: object,
-  defaultValue?: number,
-  value?: number,
-  values?: number[],
-  min?: number,
-  max?: number,
-  step?: number,
-  form?: Element,
-  type?: string
-}
-
-interface ViewConfig {
+interface IViewConfig {
   min?: number;
-
   max?: number;
-
   step?: number;
-
   value?: number[];
-
-  defaultValue?: number[];
-
   tooltip?: boolean;
-
   vertical?: boolean;
-
   multiple?: boolean;
-
   showTooltips?: boolean;
-
   color1?: string;
-
   color2?: string;
 }
 
 class View {
-  eventObserver = new EventObserver();
+  public eventObserver = new EventObserver();
 
-  slider: ElementInput;
+  private slider: JQuery;
 
-  input: ElementInput;
+  public config: IViewConfig;
 
-  config: ViewConfig;
+  private defaultValue?: number[];
 
-  mouseAxis: { x: string, y: string };
+  private mouseAxis: { x: string, y: string };
 
-  trackSize: { x: string, y: string };
+  private trackSize: { x: string, y: string };
 
-  trackPos: { x: string, y: string };;
+  private trackPos: { x: string, y: string };
 
-  nodes: {
-    container: JQuery
+  private nodes: {
+    container: JQuery,
+    input: JQuery;
     track: JQuery,
     progress: JQuery,
-    handle: ElementWithIndex | ElementWithIndex[],
+    handle: IJQueryWithIndex | IJQueryWithIndex[],
     tooltip: JQuery | JQuery[]
   };
 
-  rects: {
+  private rects: {
     container: ClientRect,
     handle: ClientRect[] | ClientRect
   };
 
-  axis: string;
+  private axis: string;
 
-  activeHandle: ElementWithIndex | boolean;
+  private activeHandle: IJQueryWithIndex | boolean;
 
-  listeners: {
+  private listeners: {
     down: EventListener,
     move: EventListener,
     up: EventListener,
@@ -113,35 +105,17 @@ class View {
     resize?: EventListener,
   };
 
-  accuracy: number;
+  private accuracy: number;
 
 
-  constructor(element?: ElementInput, config?: ViewConfig) {
-    const defaultConfig = {
-      tooltip: true,
-      showTooltips: true,
-      multiple: false,
-      vertical: false,
-      color1: '#3db13d',
-      color2: '#ccc',
-    };
-    const defaultData = {
-      min: 0, max: 100, step: 1, value: [50],
-    };
-
+  constructor(element?: JQuery, config?: IViewConfig) {
     // user has passed a CSS3 selector string
     this.slider = $(element);
-    this.input = $('<input/>');
-    $(this.input).addClass(SLIDER_CLASSES.input)
-      .attr('type', 'range');
-    $(this.slider).append(this.input);
 
-    this.config = { ...defaultConfig, ...defaultData, ...config };
-
-    if (!this.config.defaultValue) {
-      this.config.defaultValue = this.config.value;
+    this.config = { ...DEFAULT_CONFIG, ...config };
+    if (!this.defaultValue) {
+      this.defaultValue = this.config.value;
     }
-    this.input.attr('value', this.config.value.toString());
 
     this.mouseAxis = { x: 'clientX', y: 'clientY' };
     this.trackSize = { x: 'width', y: 'height' };
@@ -155,18 +129,15 @@ class View {
       * Render the instance
       * @return {Void}
       */
-  render(): void {
+  private render(): void {
     this.axis = !this.config.vertical ? 'x' : 'y';
 
-    this.input.ranger = this;
-
+    const input = $('<input/>').addClass(SLIDER_CLASSES.input).attr('type', 'range');
     const container = $('<div/>').addClass(SLIDER_CLASSES.container);
     const track = $('<div/>').addClass(SLIDER_CLASSES.track);
     const progress = $('<div/>').addClass(SLIDER_CLASSES.progress);
-
-    let handle: ElementWithIndex | ElementWithIndex[] = $('<div/>').addClass(SLIDER_CLASSES.handle);
+    let handle: IJQueryWithIndex | IJQueryWithIndex[] = $('<div/>').addClass(SLIDER_CLASSES.handle);
     let tooltip: JQuery | JQuery[] = $('<div/>').addClass(SLIDER_CLASSES.tooltip);
-
 
     $(track).append(progress);
 
@@ -190,7 +161,6 @@ class View {
       }
 
       $(progress).append(tooltip[2]);
-
       $(container).addClass(SLIDER_CLASSES.multiple);
     } else {
       $(progress).append(handle);
@@ -198,7 +168,7 @@ class View {
     }
 
     this.nodes = {
-      container, track, progress, handle, tooltip,
+      input, container, track, progress, handle, tooltip,
     };
 
     $(container).append(track);
@@ -223,21 +193,21 @@ class View {
     }
 
     $(this.slider).append(container);
-    $(this.input).insertBefore($(track));
-    $(this.input).addClass(SLIDER_CLASSES.input);
+    $(this.nodes.input).insertBefore($(track));
+    $(this.nodes.input).addClass(SLIDER_CLASSES.input);
     this.bind();
 
     this.update();
   }
 
-  reset(): void {
-    this.setValue(this.config.defaultValue[0], 0);
+  private reset(): void {
+    this.setValue(this.defaultValue[0], 0);
     if (this.config.multiple) {
-      this.setValue(this.config.defaultValue[1], 1);
+      this.setValue(this.defaultValue[1], 1);
     }
   }
 
-  setValueFromPosition(e: Event) {
+  private setValueFromPosition(e: Event) {
     const min = parseFloat(this.config.min.toString());
     const max = parseFloat(this.config.max.toString());
     const step = parseFloat(this.config.step.toString());
@@ -252,15 +222,16 @@ class View {
       : (pos / size) * 100;
 
     // work out the value from the position
-    let value: number = (position * (max - min)) / 100 + min;
+    let value = (position * (max - min)) / 100 + min;
+
 
     // apply granularity (step)
     value = Math.ceil(value / step) * step;
 
-    let index: number = 0;
+    let index = 0;
 
     if (this.config.multiple) {
-      index = (this.activeHandle as ElementWithIndex).indexElement;
+      index = (this.activeHandle as IJQueryWithIndex).indexElement;
 
       switch (index) {
         case 0:
@@ -280,13 +251,13 @@ class View {
     // Only update the value if it's different.
     // This allows the onChange event to be fired only on a step
     // and not all the time.
-    if (e.type === 'mousedown' || parseFloat(value.toString()) !== parseFloat(this.config.value.toString())) {
+    if (e.type === 'mousedown' || parseFloat(value.toString()) !== parseFloat(this.config.value[index].toString())) {
       this.setValue(value, Number(index));
     }
   }
 
-  change(): void {
-    $(this.input).attr('value', this.config.value[0]);
+  private change(): void {
+    $(this.nodes.input).attr('value', this.config.value[0]);
     this.eventObserver.notifyObservers({ message: 'valueChange', value: this.config.value });
   }
 
@@ -296,16 +267,16 @@ class View {
        * @param  {Object} e
        * @return {Void}
        */
-  down(e: MouseEvent): void {
+  private down(e: MouseEvent): void {
     e.preventDefault();
     // show the tip now so we can get the dimensions later
     $(this.nodes.container).addClass(SLIDER_CLASSES.handleDragging);
 
     this.recalculate();
 
-    (this.activeHandle as ElementWithIndex) = this.getHandle(e);
+    (this.activeHandle as IJQueryWithIndex) = this.getHandle(e);
 
-    $(this.activeHandle as ElementWithIndex).addClass(SLIDER_CLASSES.handleActive);
+    $(this.activeHandle as IJQueryWithIndex).addClass(SLIDER_CLASSES.handleActive);
 
     this.setValueFromPosition(e);
 
@@ -318,10 +289,8 @@ class View {
        * @param  {Object} e
        * @return {Void}
        */
-  move(e: Event): void {
+  private move(e: Event): void {
     this.setValueFromPosition(e);
-
-    // $(this.input).trigger("input");
   }
 
   /**
@@ -329,31 +298,30 @@ class View {
        * @param  {Object} e
        * @return {Void}
        */
-  up(): void {
+  private up(): void {
     $(this.nodes.container).removeClass(SLIDER_CLASSES.handleDragging);
 
-
-    $(this.activeHandle as ElementWithIndex).removeClass(SLIDER_CLASSES.handleActive);
+    $(this.activeHandle as IJQueryWithIndex).removeClass(SLIDER_CLASSES.handleActive);
     this.activeHandle = false;
 
     $(document).off('mousemove', this.listeners.move as any);
     $(document).off('mouseup', this.listeners.up as any);
 
-    $(this.input).trigger('change');
+    $(this.nodes.input).trigger('change');
   }
 
   /**
        * Recache the dimensions
        * @return {Void}
        */
-  recalculate(): void {
+  private recalculate(): void {
     let handle: ClientRect[] | ClientRect = [];
     if (this.config.multiple && Array.isArray(this.nodes.handle)) {
-      (this.nodes.handle as ElementWithIndex[]).forEach((node, i) => {
+      (this.nodes.handle as IJQueryWithIndex[]).forEach((node, i) => {
         handle[i] = $(node)[0].getBoundingClientRect();
       });
     } else {
-      handle = $(this.nodes.handle as ElementWithIndex)[0].getBoundingClientRect();
+      handle = $(this.nodes.handle as IJQueryWithIndex)[0].getBoundingClientRect();
     }
 
     this.rects = {
@@ -366,7 +334,7 @@ class View {
        * Update the instance
        * @return {Void}
        */
-  update(): void {
+  private update(): void {
     this.recalculate();
 
     this.accuracy = 0;
@@ -390,13 +358,12 @@ class View {
        * @param {Number} value
        * @param {Number} index
        */
-  setValue(value?: number | string, index?: number): void {
+  public setValue(value?: number | string, index?: number): void {
     // const rects = this.rects;
     let val = value;
     const { nodes } = this;
     const min = parseFloat(this.config.min.toString());
     const max = parseFloat(this.config.max.toString());
-    // const { handle } = nodes;
 
     if (this.config.multiple && index === undefined) {
       return;
@@ -452,7 +419,7 @@ class View {
        * Set the bar size / position based on the value
        * @param {Number} value
        */
-  setPosition(): void {
+  private setPosition(): void {
     let width: number;
 
     if (this.config.multiple) {
@@ -476,7 +443,7 @@ class View {
        * @param  {Number} value The val to calculate the handle position
        * @return {Number}
        */
-  getPosition(value: number = this.config.value[0]): number {
+  private getPosition(value: number = this.config.value[0]): number {
     const min = parseFloat(this.config.min.toString());
     const max = parseFloat(this.config.max.toString());
 
@@ -488,7 +455,7 @@ class View {
        * Check whether the tooltips are colliding
        * @return {Boolean}
        */
-  tipsIntersecting(): boolean {
+  private tipsIntersecting(): boolean {
     const nodes = this.nodes.tooltip;
     const a = $(nodes[0])[0].getBoundingClientRect();
     const b = $(nodes[1])[0].getBoundingClientRect();
@@ -501,9 +468,9 @@ class View {
        * @param  {Object} e Event
        * @return {Obejct} HTMLElement
        */
-  getHandle(e: MouseEvent): ElementWithIndex {
+  private getHandle(e: MouseEvent): IJQueryWithIndex {
     if (!this.config.multiple) {
-      return (this.nodes.handle as ElementWithIndex);
+      return (this.nodes.handle as IJQueryWithIndex);
     }
 
     const r = this.rects;
@@ -512,28 +479,28 @@ class View {
     // const handle = $(e.target).closest(`.${SLIDER_CLASSES.handle}`);
 
     if (distA > distB) {
-      return (this.nodes.handle[1] as ElementWithIndex);
+      return (this.nodes.handle[1] as IJQueryWithIndex);
     }
-    return (this.nodes.handle[0] as ElementWithIndex);
+    return (this.nodes.handle[0] as IJQueryWithIndex);
   }
 
   /**
        * Destroy the instance
        * @return {Void}
        */
-  destroy(): void {
-    if (this.input.ranger) {
+  public destroy(): void {
+    if (this.nodes.container) {
       // remove all event listeners
       this.unbind();
 
       $(this.nodes.container).remove();
       // remove the reference from the input
-      delete (this.input.ranger);
+      // delete (this.nodes.input.ranger);
     }
   }
 
 
-  bind(): void {
+  private bind(): void {
     this.listeners = {
       down: this.down.bind(this),
       move: this.move.bind(this),
@@ -553,16 +520,13 @@ class View {
     $(window).on('resize', this.listeners.resize);
 
     // detect native change event
-    $(this.input).on('change', this.listeners.change);
+    $(this.nodes.input).on('change', this.listeners.change);
 
 
     $(this.nodes.container).on('mousedown', this.listeners.down);
   }
 
-  unbind(): void {
-    $().off();
-
-
+  private unbind(): void {
     $(this.nodes.container).off('mousedown');
 
 
@@ -573,14 +537,14 @@ class View {
     $(window).off('resize');
 
     // remove input listener
-    $(this.input).off('change');
+    $(this.nodes.input).off('change');
 
     this.listeners = null;
   }
 
 
   // throttler
-  static throttle(fn?: EventListener, limit?: number, context?: object) : EventListener {
+  private static throttle(fn?: EventListener, limit?: number, context?: object) : EventListener {
     let wait: boolean;
     return function func() {
       let cont = context;
@@ -596,7 +560,7 @@ class View {
     };
   }
 
-  setProperty(property: string, val: string | number | boolean | number[]): void {
+  public setProperty(property: string, val: string | number | boolean | number[]): void {
     if (Object.prototype.hasOwnProperty.call(this.config, property)) {
       if (property !== 'tooltip') {
         this.config[property] = val;
@@ -630,10 +594,10 @@ class View {
     }
   }
 
-  getProperty(prop: string): number[] | number | string | boolean {
+  public getProperty(prop: string): number[] | number | string | boolean {
     return this.config[prop];
   }
 }
 
 
-export { View, ViewConfig };
+export { View, IViewConfig };
