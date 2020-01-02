@@ -1,4 +1,4 @@
-import { Model, ModelData } from "./Model";
+import { Model, config } from "./Model";
 
 describe("Model", () => {
 	it("может быть создн", () => {
@@ -8,7 +8,7 @@ describe("Model", () => {
   
 	it("может быть создан с параметрами по умолчанию", () => {
 		const model = new Model();
-		expect(model.modelData).toEqual({ min: 1, max: 100, step: 1, value: [ 50 ], multiple: false });
+		expect(model.config).toEqual({ min: 1, max: 100, step: 1, value: [ 50 ], multiple: false });
 	});
   
 	it("может быть создан с нужными параметрами", () => {
@@ -18,7 +18,7 @@ describe("Model", () => {
 			step: 10,
 			value: [1500]
 		});
-		expect(model.modelData).toEqual({ min: 1000, max: 2000, step: 10, value: [ 1500 ], multiple: false });
+		expect(model.config).toEqual({ min: 1000, max: 2000, step: 10, value: [ 1500 ], multiple: false });
 	});
 
 	it("может быть создан с нужными параметрами(диапазон)", () => {
@@ -28,7 +28,7 @@ describe("Model", () => {
 			step: 1000,
 			value: [14000,15000]
 		});
-		expect(model.modelData).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 14000,15000 ], multiple: true });
+		expect(model.config).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 14000,15000 ], multiple: true });
 	});
 
 	it("может исправить неправильные параметры (value1 > value2 )", () => {
@@ -38,7 +38,7 @@ describe("Model", () => {
 			step: 1000,
 			value: [14000,12000]
 		});
-		expect(model.modelData).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 14000,14000 ], multiple: true });
+		expect(model.config).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 14000,14000 ], multiple: true });
 	});
 
 	it("может исправить неправильные параметры (value > max )", () => {
@@ -48,7 +48,7 @@ describe("Model", () => {
 			step: 1000,
 			value: [25000]
 		});
-		expect(model.modelData).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 20000 ], multiple: false });
+		expect(model.config).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 20000 ], multiple: false });
 	});
 
 	it("может исправить неправильные параметры (value < min )", () => {
@@ -58,7 +58,7 @@ describe("Model", () => {
 			step: 1000,
 			value: [7000]
 		});
-		expect(model.modelData).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 10000 ], multiple: false });
+		expect(model.config).toEqual({ min: 10000, max: 20000, step: 1000, value: [ 10000 ], multiple: false });
 	});
 
 
@@ -81,7 +81,7 @@ describe("Model", () => {
 
 		for (let data of properties) {
 			model.setProperty(data.property,data.value);
-			expect(model.modelData[data.property]).toEqual(data.value);
+			expect(model.config[data.property]).toEqual(data.value);
 		}
 	});
 
@@ -120,7 +120,7 @@ describe("Model", () => {
 			value: [12000,17000]
 		});
 
-		model.modelData.value= [16000];
+		model.config.value= [16000];
 		model.checkMultiple();
     
 		expect(model.getProperty("multiple")).toEqual(false);
@@ -134,10 +134,10 @@ describe("Model", () => {
 			value: [7000]
 		});
 
-		model.modelData.value= [16000,18000];
+		model.config.value= [16000,18000];
 		model.checkMultiple();
     
-		expect(model.modelData.multiple).toEqual(true);
+		expect(model.config.multiple).toEqual(true);
 	});
   
 
@@ -149,10 +149,10 @@ describe("Model", () => {
 			value: [16000,15000]
 		});
 
-		model.modelData.value= [16000,15000];
+		model.config.value= [16000,15000];
 		model.checkValue();
     
-		expect(model.modelData.value).toEqual([16000,16000]);
+		expect(model.config.value).toEqual([16000,16000]);
 	});
 
 	it("checkValue()  может исправить  value2 > max", () => {
@@ -163,10 +163,10 @@ describe("Model", () => {
 			value: [16000,17000]
 		});
 
-		model.modelData.value= [16000,25000];
+		model.config.value= [16000,25000];
 		model.checkValue();
     
-		expect(model.modelData.value).toEqual([16000,20000]);
+		expect(model.config.value).toEqual([16000,20000]);
 	});
   
 	it("checkValue() может исправить value1 < min", () => {
@@ -177,10 +177,10 @@ describe("Model", () => {
 			value: [16000,17000]
 		});
 
-		model.modelData.value= [6000,17000];
+		model.config.value= [6000,17000];
 		model.checkValue();
     
-		expect(model.modelData.value).toEqual([10000,17000]);
+		expect(model.config.value).toEqual([10000,17000]);
 	});
 
 });

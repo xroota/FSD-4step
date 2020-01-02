@@ -1,13 +1,13 @@
 import { EventObserver } from '../EventObserver/EventObserver';
 
-const DEFAULT_DATA = {
+const DEFAULT_CONFIG = {
   min: 1,
   max: 100,
   step: 1,
   value: [50],
   multiple: false,
 };
-interface ModelData {
+interface IModelConfig {
   min?: number;
 
   max?: number;
@@ -20,29 +20,16 @@ interface ModelData {
 }
 
 class Model {
-  eventObserver = new EventObserver();
+  public eventObserver = new EventObserver();
 
-  modelData : {
-    min: number,
+  public config : IModelConfig;
 
-    max: number,
+  constructor(config: IModelConfig = {}) {
+    this.config = { ...DEFAULT_CONFIG };
 
-    step: number,
-
-    value: number[],
-
-    multiple?: boolean
-  };
-
-  constructor(data: ModelData = {}) {
-    this.modelData = { ...DEFAULT_DATA };
-
-
-    const newData = this.modelData;
-
-    Object.keys(data).map((key) => {
-      if (typeof newData[key] !== 'undefined') {
-        newData[key] = data[key];
+    Object.keys(config).map((key) => {
+      if (typeof this.config[key] !== 'undefined') {
+        this.config[key] = config[key];
       }
       return true;
     });
@@ -51,55 +38,55 @@ class Model {
     this.checkValue();
   }
 
-  checkMultiple(): void {
-    this.modelData.multiple = this.modelData.value.length > 1;
+  private checkMultiple(): void {
+    this.config.multiple = this.config.value.length > 1;
   }
 
-  checkValue(): void {
-    if (this.modelData.value[0] > this.modelData.max) {
-      this.modelData.value[0] = this.modelData.max;
+  private checkValue(): void {
+    if (this.config.value[0] > this.config.max) {
+      this.config.value[0] = this.config.max;
     }
-    if (this.modelData.value[0] < this.modelData.min) {
-      this.modelData.value[0] = this.modelData.min;
+    if (this.config.value[0] < this.config.min) {
+      this.config.value[0] = this.config.min;
     }
-    if (this.modelData.multiple) {
-      if (this.modelData.value[1] > this.modelData.max) {
-        this.modelData.value[1] = this.modelData.max;
+    if (this.config.multiple) {
+      if (this.config.value[1] > this.config.max) {
+        this.config.value[1] = this.config.max;
       }
-      if (this.modelData.value[1] < this.modelData.min) {
-        this.modelData.value[1] = this.modelData.min;
+      if (this.config.value[1] < this.config.min) {
+        this.config.value[1] = this.config.min;
       }
-      if (this.modelData.value[0] >= this.modelData.value[1]) {
-        const val = this.modelData.value[0];
-        this.modelData.value[1] = val;
+      if (this.config.value[0] >= this.config.value[1]) {
+        const val = this.config.value[0];
+        this.config.value[1] = val;
       }
     }
   }
 
-  setProperty(prop: string, value: number | number[] | string): void {
-    const val = this.modelData.value;
-    this.modelData[prop] = value;
+  public setProperty(prop: string, value: number | number[] | string): void {
+    const val = this.config.value;
+    this.config[prop] = value;
     if (prop === 'value') {
       this.checkMultiple();
     }
 
     if (prop === 'multiple') {
       if ((typeof value === 'boolean') && (value === true)) {
-        this.modelData.value = [this.modelData.value[0], this.modelData.max];
+        this.config.value = [this.config.value[0], this.config.max];
       } else {
-        this.modelData.value = [this.modelData.value[0]];
+        this.config.value = [this.config.value[0]];
       }
     }
 
     this.checkValue();
-    if (val !== this.modelData.value) {
-      this.eventObserver.notifyObservers({ message: 'change', property: 'value', value: this.modelData.value });
+    if (val !== this.config.value) {
+      this.eventObserver.notifyObservers({ message: 'change', property: 'value', value: this.config.value });
     }
-    this.eventObserver.notifyObservers({ message: 'change', property: prop, value: this.modelData[prop] });
+    this.eventObserver.notifyObservers({ message: 'change', property: prop, value: this.config[prop] });
   }
 
-  getProperty(prop: string): number[] | number | string | boolean {
-    return this.modelData[prop];
+  public getProperty(prop: string): number[] | number | string | boolean {
+    return this.config[prop];
   }
 }
-export { Model, ModelData };
+export { Model, IModelConfig };

@@ -1,6 +1,6 @@
 import { Presenter } from "./Presenter";
 import { View, ViewConfig } from "../View/View";
-import { Model, ModelData } from "../Model/Model";
+import { Model, config } from "../Model/Model";
 
 describe("Presenter", () => {
 	let model;
@@ -27,7 +27,7 @@ describe("Presenter", () => {
 
 		view = new View(
       $(".slider"),
-      Object.assign({}, model.modelData, viewConfig)
+      Object.assign({}, model.config, viewConfig)
     );
 		presenter = new Presenter(model, view, "#output");
 	});
@@ -43,9 +43,9 @@ describe("Presenter", () => {
 
 	it("должен создавться с параметрами по умолчанию", () => {
 		model = new Model();
-		view = new View($(".slider"), model.modelData);
+		view = new View($(".slider"), model.config);
 		presenter = new Presenter(model, view, ".output");
-		expect(presenter.model.modelData).toEqual({
+		expect(presenter.model.config).toEqual({
 			min: 1,
 			max: 100,
 			step: 1,
@@ -62,16 +62,16 @@ describe("Presenter", () => {
 			max: 100,
 			step: 1,
 			value: [50],
-			defaultValue: [50]
+			vertical: false
 		});
 	});
 
 	it("должен создавться с одиночным значением", () => {
 		model = new Model();
 
-		view = new View($(".slider"), model.modelData);
+		view = new View($(".slider"), model.config);
 		presenter = new Presenter(model, view, ".output");
-		expect(presenter.model.modelData).toEqual({
+		expect(presenter.model.config).toEqual({
 			min: 1,
 			max: 100,
 			step: 1,
@@ -82,13 +82,13 @@ describe("Presenter", () => {
 			tooltip: true,
 			showTooltips: true,
 			multiple: false,
+			vertical: false,
 			color1: "#3db13d",
 			color2: "#ccc",
 			min: 1,
 			max: 100,
 			step: 1,
-			value: [50],
-			defaultValue: [50]
+			value: [50]
 		});
 	});
 
@@ -109,10 +109,10 @@ describe("Presenter", () => {
 
 		view = new View(
       $(".slider"),
-      Object.assign({}, model.modelData, viewConfig)
+      Object.assign({}, model.config, viewConfig)
     );
 		presenter = new Presenter(model, view, ".output");
-		expect(presenter.model.modelData).toEqual({
+		expect(presenter.model.config).toEqual({
 			min: 1000,
 			max: 2000,
 			step: 10,
@@ -129,23 +129,22 @@ describe("Presenter", () => {
 			max: 2000,
 			step: 10,
 			value: [1500, 1700],
-			defaultValue: [1500, 1700],
 			vertical: false
 		});
 	});
 
-	describe("dataViewChange()", () => {
+	describe("viewConfigChange()", () => {
 		it("должен изменять значение value модели", () => {
-			presenter.dataViewChange({
+			presenter.viewConfigChange({
 				message: "valueChange",
 				property: "value",
 				value: [1700]
 			});
-			expect(presenter.model.modelData.value).toEqual([1700]);
+			expect(presenter.model.config.value).toEqual([1700]);
 		});
 	});
 
-	describe("dataModelChange()", () => {
+	describe("modelConfigChange()", () => {
 		it("должен изменять значения параметров View", () => {
 			let properties = [
         { message: "change", property: "value", value: [1700] },
@@ -155,20 +154,20 @@ describe("Presenter", () => {
 			];
 
 			for (let data of properties) {
-				presenter.dataModelChange(data);
+				presenter.modelConfigChange(data);
 				expect(presenter.view.config[data.property]).toEqual(data.value);
 			}
 		});
 
 		it("должен изменять значения параметрa value range View ", () => {
-			presenter.dataModelChange({
+			presenter.modelConfigChange({
 				message: "change",
 				property: "tooltip",
 				value: true
 			});
 			expect(presenter.view.config.tooltip).toBe(true);
 
-			presenter.dataModelChange({
+			presenter.modelConfigChange({
 				message: "change",
 				property: "value",
 				value: [1700]
@@ -190,11 +189,11 @@ describe("Presenter", () => {
 
 			view = new View(
         $(".slider"),
-        Object.assign({}, model.modelData, viewConfig)
+        Object.assign({}, model.config, viewConfig)
       );
 			presenter = new Presenter(model, view, ".output");
 
-			presenter.dataModelChange({
+			presenter.modelConfigChange({
 				message: "change",
 				property: "value",
 				value: [1700, 1800]
@@ -204,33 +203,24 @@ describe("Presenter", () => {
 		});
 	});
 
-	describe("setOutput()", () => {
+	describe("setOutputValue()", () => {
 		it("должен изменять значение value элемента #output", () => {
 			expect($("#output")).toHaveValue("1500");
 
-			presenter.model.modelData.value = [1700];
-			presenter.setOutput();
+			presenter.model.config.value = [1700];
+			presenter.setOutputValue();
 
 			expect($("#output")).toHaveValue("1700");
 		});
 	});
 
-	describe("setOutput()", () => {
-		it("должен изменять значение value элемента #output", () => {
-			expect($("#output")).toHaveValue("1500");
 
-			presenter.model.modelData.value = [1700];
-			presenter.setOutput();
 
-			expect($("#output")).toHaveValue("1700");
-		});
-	});
-
-	describe("setModelValue()", () => {
+	describe("setOutputValue()", () => {
 		it("должен изменять значение value  Model при изменении элеемента #output", () => {
 			$("#output").val(1900);
-			presenter.setModelValue();
-			expect(presenter.model.modelData.value).toEqual([1900]);
+			presenter.getOutputValue();
+			expect(presenter.model.config.value).toEqual([1900]);
 		});
 	});
 
@@ -245,7 +235,7 @@ describe("Presenter", () => {
 
 			for (let data of properties) {
 				presenter.setProperty(data.property, data.value);
-				expect(presenter.model.modelData[data.property]).toEqual(data.value);
+				expect(presenter.model.config[data.property]).toEqual(data.value);
 			}
 		});
 	});

@@ -16,12 +16,12 @@
 import './index.scss';
 import * as dat from 'dat.gui';
 import './jquery.slider.ts';
-import { ViewConfig } from './View/View';
+import { IViewConfig } from './View/View';
 
 
 class SliderPanel {
   static updateModel(prop: string, val: number| number[] | boolean, slider: JQuery): void {
-    slider.slider('update', { property: prop, value: val });
+    slider.slider('setProperty', { property: prop, value: val });
   }
 
   constructor(slider, elementOutput, config) {
@@ -78,7 +78,7 @@ f.addColor(configColor, 'color2').name('Secondary').onChange((val) => {
 f.open();
 
 
-const configSlider1: ViewConfig = {
+const configSlider1: IViewConfig = {
   tooltip: true,
   vertical: false,
   showTooltips: true,
@@ -91,7 +91,7 @@ const configSlider1: ViewConfig = {
 
 };
 
-const configSlider2: ViewConfig = {
+const configSlider2: IViewConfig = {
   tooltip: true,
   vertical: false,
   showTooltips: true,
@@ -103,7 +103,7 @@ const configSlider2: ViewConfig = {
   color2: configColor.color2,
 };
 
-const configSlider3: ViewConfig = {
+const configSlider3: IViewConfig = {
   tooltip: true,
   vertical: true,
   showTooltips: true,
@@ -115,7 +115,7 @@ const configSlider3: ViewConfig = {
   color2: configColor.color2,
 };
 
-const configSlider4: ViewConfig = {
+const configSlider4: IViewConfig = {
   tooltip: true,
   vertical: true,
   showTooltips: true,
@@ -126,7 +126,6 @@ const configSlider4: ViewConfig = {
   color1: configColor.color1,
   color2: configColor.color2,
 };
-
 const slider1: JQuery = $('.slider-panel__slider1').slider(configSlider1, '#slider-panel__value1') as JQuery;
 configSlider1.multiple = slider1.slider('getProperty', { property: 'multiple' }) as boolean;
 const slider2: JQuery = $('.slider-panel__slider2').slider(configSlider2, '#slider-panel__value2') as JQuery;

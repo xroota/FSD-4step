@@ -460,7 +460,7 @@ describe("View", () => {
 
 			view = new View(
         $(".slider"),
-        Object.assign({}, model.modelData, viewConfig)
+        Object.assign({}, model.config, viewConfig)
       );
 			presenter = new Presenter(model, view, "#output");
 		});
@@ -468,7 +468,7 @@ describe("View", () => {
 		it("может отравлять value подписанной на событие model", () => {
 			presenter.view.config.value = [1700];
 			presenter.view.change();
-			expect(presenter.model.modelData.value).toEqual([1700]);
+			expect(presenter.model.config.value).toEqual([1700]);
 		});
 	});
 
@@ -671,13 +671,6 @@ describe("View", () => {
 			expect($(".slider__container")).not.toExist();
 		});
 
-		it("может удалять объект слайдера", () => {
-			expect(view.input.ranger).toExist();
-
-			view.destroy();
-
-			expect(view.input.ranger).not.toExist();
-		});
 	});
 
 	describe("bind()", () => {
@@ -758,7 +751,7 @@ describe("View", () => {
 		});
 
 		it("возвращает функцию", () => {
-			expect(view.throttle(function() {})).toBeInstanceOf(Function);
+			expect(View.throttle(function() {})).toBeInstanceOf(Function);
 		});
 	});
 });

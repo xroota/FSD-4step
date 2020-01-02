@@ -1,32 +1,32 @@
 import { Model } from '../Model/Model';
 import { View } from '../View/View';
-import { EventData } from '../EventObserver/EventObserver';
+import { IEventData } from '../EventObserver/EventObserver';
 
 class Presenter {
-  view: View;
+  public view: View;
 
-  model: Model;
+  public model: Model;
 
-  outputElement: JQuery;
+  private outputElement: JQuery;
 
   constructor(model: Model, view: View, outputElement?: string) {
-    view.eventObserver.addObserver(this.dataViewChange.bind(this));
-    model.eventObserver.addObserver(this.dataModelChange.bind(this));
+    view.eventObserver.addObserver(this.viewConfigChange.bind(this));
+    model.eventObserver.addObserver(this.modelConfigChange.bind(this));
     this.model = model;
     this.view = view;
     this.outputElement = $(outputElement);
-    this.setOutput();
-    $(this.outputElement).change(this.setModelValue.bind(this));
+    this.setOutputValue();
+    $(this.outputElement).change(this.getOutputValue.bind(this));
   }
 
 
-  dataViewChange(data: EventData): void {
+  private viewConfigChange(data: IEventData): void {
     if (data.message === 'valueChange') {
       if (Array.isArray(data.value)) this.model.setProperty('value', data.value);
     }
   }
 
-  dataModelChange(data: EventData): void {
+  private modelConfigChange(data: IEventData): void {
     if (data.message === 'change') {
       switch (data.property) {
         case 'value':
@@ -34,10 +34,10 @@ class Presenter {
           if (Array.isArray(data.value) && data.value.length > 0) {
             this.view.setValue(data.value[1], 1);
           }
-          this.setOutput();
+          this.setOutputValue();
           break;
         case 'multiple':
-          this.view.setProperty('value', this.model.modelData.value);
+          this.view.setProperty('value', this.model.config.value);
           this.view.setProperty(data.property, data.value);
           break;
         default: this.view.setProperty(data.property, data.value);
@@ -45,8 +45,8 @@ class Presenter {
     }
   }
 
-  setOutput(): void {
-    const { value } = this.model.modelData;
+  private setOutputValue(): void {
+    const { value } = this.model.config;
     if (this.outputElement.is('input')) {
       this.outputElement.val(value[1] ? (value as number[]).join('-') : value[0]);
       this.outputElement.attr('value', value[1] ? (value as number[]).join('-') : value[0]);
@@ -55,31 +55,30 @@ class Presenter {
     }
   }
 
+  private getOutputValue(): void {
+    const val = $(this.outputElement).val().toString();
+    const valArr = val.split('-').map(Number);
+    this.model.setProperty('value', valArr);
+  }
 
-  setProperty(prop: string, value: number | number[] | string): void {
-    if (prop in this.model.modelData) {
+  public setProperty(prop: string, value: number | number[] | string): void {
+    if (prop in this.model.config) {
       this.model.setProperty(prop, value);
     } else {
       this.view.setProperty(prop, value);
     }
   }
 
-  setModelValue(): void {
-    const val: string = $(this.outputElement).val().toString();
-    const valArr: number[] = val.split('-').map(Number);
-    this.model.setProperty('value', valArr);
-  }
 
-
-  getProperty(prop: string): number[] | number | string | boolean {
-    if (prop in this.model.modelData) {
+  public getProperty(prop: string): number[] | number | string | boolean {
+    if (prop in this.model.config) {
       return this.model.getProperty(prop);
     }
 
     return this.view.getProperty(prop);
   }
 
-  destroy(): void {
+  private destroy(): void {
     this.view.destroy();
     delete this.view;
     delete this.model;
