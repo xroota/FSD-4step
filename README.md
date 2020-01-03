@@ -2,7 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
 
-- [Overview](#overview)
+- [Тестовая страница](#Тестовая страница)
 - [References](#references)
   - [TypeScript](#typescript)
   - [Webpack 4](#webpack-4)
@@ -11,8 +11,12 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-Тестовая страница[Ссылка](https://xroota.github.io/FSD-4step/dist/index.html)
-UML диаграмма классов
+## Тестовая страница 
+
+[Ссылка](https://xroota.github.io/FSD-4step/dist/index.html)
+
+## UML диаграмма классов
+
 ![Diagram](https://github.com/xroota/FSD-4step/blob/master/uml.png)
 
 # Overview
