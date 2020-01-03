@@ -39,71 +39,61 @@ View            | Отображение данных
 PRESENTER       | 
 Presenter       | Реализует взаимодействие между Моделью и Видом
 
-
 ## UML диаграмма классов
 
 ![Diagram](https://github.com/xroota/FSD-4step/blob/master/uml.png)
 
-# Overview
+# API
 
-The tutorial explaining how to use this repo and it's directory structure and
-configuration files are in this
-[developerlife.com tutorial](http://developerlife.com/2019/07/06/starter-project-typescript-karma-jasmine-webpack/).
+## Парамфетры
+Параметр         |Тип       |Значение по умолчанию|Описание
+-----------------|----------|---------------------|-----------------
+min              |number    |0                    |Минимальное значение
+max              |number    |100                  |Максимальное значение
+step             |number    |1                    |Шаг слайдера
+value            |number[]  |50                   |Значение слайдера
+tooltip          |boolean   |true                 |Отображение подсказки
+vertical         |boolean   |false                |Вертикльное расположение
+showTooltips     |boolean   |true                 |Отбражение подсказки все время
+color1           |string    |#3db13d              |Цвет шкалы 
+color2           |string    |#ccc                 |Цвет остальных элементов
 
-<img src="https://raw.githubusercontent.com/nazmulidris/ts-template/master/arch-diagram.jpg" width="50%"></img>
+## Методы
 
-# References
+Установить значение параметра слайдера
+```JavaScript
+$( '.slider' ).slider('setProperty', { min: 20 })
+```
 
-## TypeScript
+Получить значение параметра слайдера
 
+```JavaScript
+const parameter = $( '.slider' ).slider('getProperty','max');
+```
 
+Уничтожить объект
+```JavaScript
+$( '.slider' ).slider('destroy');
+```
 
-TypeScript intro
+## Пример инициализации
 
-- https://www.youtube.com/watch?v=XShQO3BvOyM
+```JavaScript
+$( '.selector' ).slider({
+      min: 1000, 
+      max: 5000, 
+      step: 10,
+      value: 300,
+      vertical: true
+})
+```
 
-TypeScript and Webpack 4 intro
+## Пример инициализации data-атрибуты
 
-- https://www.youtube.com/watch?v=8TiZdePyduI
-- https://github.com/GeekLaunch/webpack-tutorial
-- https://github.com/TypeStrong/ts-loader
+```html
+<div class='slider' data-min=1000 data-max=5000 data-step=10 data-vertical='true' data-value=300></div>
 
-## Webpack 4
-
-Webpack 4
-
-- https://wanago.io/2018/07/16/webpack-4-course-part-one-entry-output-and-es6-modules/
-
-Webpack configuration
-
-- https://webpack.js.org/configuration/devtool/
-- https://medium.com/@rajaraodv/webpack-the-confusing-parts-58712f8fcad9
-
-Webpack dev server configuration
-
-- https://github.com/webpack/webpack-dev-server/issues/720#issuecomment-268470989
-- https://webpack.js.org/guides/development/#using-webpack-dev-server
-
-## Karma, Jasmine
-
-Karma, Jasmine
-
-- http://www.bradoncode.com/blog/2015/02/27/karma-tutorial/
-- https://stackoverflow.com/a/17327465/2085356
-
-## All together
-
-Karma, Jasmine, and Webpack setup
-
-- https://mike-ward.net/2015/09/07/tips-on-setting-up-karma-testing-with-webpack/
-
-TypeScript migrate from typings to npm @types
-
-- http://codereform.com/blog/post/migrating-from-typings-to-npm-types/
-
-TypeScript, Webpack, Jasmine, and Karma
-
-- https://templecoding.com/blog/2016/02/02/how-to-setup-testing-using-typescript-mocha-chai-sinon-karma-and-webpack
-- https://github.com/thitemple/TypescriptMochaWebpackDemo
-# FSD-4step
-
+<script>
+ $( '.slider' ).slider()
+</script>
+```
