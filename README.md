@@ -12,7 +12,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 Тестовая страница
-(https://github.com/xroota/FSD-4step/dist/index.html)
+(https://github.com/xroota/FSD-4step/blob/master/dist/index.html)
 ![Diagram](https://github.com/xroota/FSD-4step/blob/master/uml.png)
 
 # Overview
