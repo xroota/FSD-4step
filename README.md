@@ -1,19 +1,44 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# FSD Slider
 
+## Развёртывание
+Клонировать
+>git clone https://github.com/xroota/FSD-4step.git
 
-- [Тестовая страница](#Тестовая страница)
-- [References](#references)
-  - [TypeScript](#typescript)
-  - [Webpack 4](#webpack-4)
-  - [Karma, Jasmine](#karma-jasmine)
-  - [All together](#all-together)
+Установка
+>npm i
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+Запустить webpack server
+>npm run start
+
+Запустить karma тесты
+>npm run test
+
+Запустить production build
+>npm run build
+
+Запустить Eslint по файлам проекта
+> npm run eslint-fix
+
 
 ## Тестовая страница 
 
 [Ссылка](https://xroota.github.io/FSD-4step/dist/index.html)
+
+# Архитектура проекта
+
+Имя класса      | Описание
+----------------|----------------------               |
+EventObserver   | Реализует паттерн 'наблюдатель'
+IEventData      | Интерфейс оповещения об изменении состояния других объектов
+MODEL           | 
+IModwelConfig   | Интерфейс параметров модели
+Model           | Содержит бизнес-логику
+VIEW            | 
+IViewConfig     | Интерфейс параметров Вида
+View            | Отображение данных
+PRESENTER       | 
+Presenter       | Реализует взаимодействие между Моделью и Видом
+
 
 ## UML диаграмма классов
 
