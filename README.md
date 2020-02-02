@@ -19,6 +19,8 @@
 Запустить Eslint по файлам проекта
 > npm run eslint-fix
 
+## Использованные библиотеки
+[jQuery](https://github.com/jquery/jquery)
 
 ## Тестовая страница 
 
