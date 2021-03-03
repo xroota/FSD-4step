@@ -41,7 +41,7 @@
     "karma-typescript": "^4.1.1",
     "karma-webpack": "^4.0.2",
     "node-sass": "^4.13.0",
-    "pug": "^2.0.4",
+    "pug": "^3.0.1",
     "pug-loader": "^2.4.0",
     "sass-loader": "^8.0.0",
     "style-loader": "^1.1.2",
